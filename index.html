@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F7 Ranking Room</title>
+<style>
+:root{--bg:#eef2f6;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#cbd5e1;--blue:#1e5bb8;--gold:#b07800}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe UI",system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2.4rem,8vw,4rem);line-height:1;margin:0 0 4px;font-weight:700;letter-spacing:.01em}
+.sub{color:var(--mut);margin:0 0 24px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.bar button{font:inherit;padding:8px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
+.bar button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.bar input{flex:1;min-width:140px;font:inherit;padding:8px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--mut);font-size:.85rem}
+th:nth-child(2),td:nth-child(2){text-align:left;width:100%}
+tr:last-child td{border-bottom:0}
+td.pos{color:var(--mut);width:1%;font-variant-numeric:tabular-nums}
+tr.top td.pos{color:var(--gold);font-weight:700}
+td{font-variant-numeric:tabular-nums}
+td.name{font-weight:600}
+td.name i{display:block;height:3px;margin-top:5px;background:var(--blue);border-radius:2px;opacity:.7}
+td.key{font-weight:700}
+.empty{padding:32px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+  <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
+  <p class="sub" id="sub">Cargando…</p>
+  <div class="bar" id="bar">
+    <button data-k="goals" aria-pressed="true">Goleadores</button>
+    <button data-k="assists" aria-pressed="false">Asistentes</button>
+    <button data-k="ga" aria-pressed="false">Goles + asist.</button>
+    <button data-k="matches" aria-pressed="false">Partidos</button>
+    <button data-k="wins" aria-pressed="false">Victorias</button>
+    <input id="q" type="search" placeholder="Buscar jugador" aria-label="Buscar jugador">
+  </div>
+  <div class="wrap"><table><thead><tr>
+    <th>#</th><th>Jugador</th><th>PJ</th><th>Goles</th><th>Asist.</th><th>G+A</th><th>Goles/PJ</th><th>Vict.</th><th>% Vict.</th>
+  </tr></thead><tbody id="rows"></tbody></table><div class="empty" id="empty" hidden>Aún no hay partidas registradas. Juega una partida completa en la sala y aparecerá aquí.</div></div>
+</main>
+<script>
+let data = [], key = "goals";
+const $ = (id) => document.getElementById(id);
+const COLS = ["matches", "goals", "assists", "ga", "gpm", "wins", "wr"];
+
+function prep(p) {
+  const ga = p.goals + p.assists;
+  return { ...p, ga, gpm: p.matches ? p.goals / p.matches : 0, wr: p.matches ? (p.wins / p.matches) * 100 : 0 };
+}
+function fmt(k, v) { return k === "gpm" ? v.toFixed(2) : k === "wr" ? Math.round(v) + "%" : v; }
+
+function render() {
+  const q = $("q").value.trim().toLowerCase();
+  const list = data.filter((p) => p.name.toLowerCase().includes(q))
+    .sort((a, b) => b[key] - a[key] || b.ga - a.ga || a.name.localeCompare(b.name));
+  const max = Math.max(1, ...list.map((p) => p[key]));
+  const tb = $("rows"); tb.textContent = "";
+  list.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    if (i < 3 && p[key] > 0) tr.className = "top";
+    const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
+    const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
+    const bar = document.createElement("i"); bar.style.width = (p[key] / max) * 100 + "%"; nm.append(bar); tr.append(nm);
+    COLS.forEach((k) => { const td = document.createElement("td"); td.textContent = fmt(k, p[k]); if (k === key) td.className = "key"; tr.append(td); });
+    tb.append(tr);
+  });
+  $("empty").hidden = data.length > 0;
+  $("sub").textContent = data.length + " jugadores · " + data.reduce((s, p) => s + p.goals, 0) + " goles registrados";
+}
+
+async function load() {
+  try { data = (await (await fetch("stats.json?t=" + Date.now())).json()).map(prep); render(); }
+  catch (e) { $("sub").textContent = "No se pudieron cargar las estadísticas"; }
+}
+
+$("bar").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  key = b.dataset.k;
+  document.querySelectorAll("#bar button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  render();
+});
+$("q").addEventListener("input", render);
+load(); setInterval(load, 30000);
+</script>
+</body>
+</html>
