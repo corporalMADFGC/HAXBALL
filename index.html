@@ -9,7 +9,7 @@
 @media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe UI",system-ui,sans-serif}
-main{max-width:1280px;margin:0 auto;padding:24px 12px 64px}
+main{max-width:1340px;margin:0 auto;padding:24px 12px 64px}
 h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem,6vw,3.2rem);line-height:1;margin:0 0 4px;font-weight:700;letter-spacing:.01em}
 .sub{color:var(--mut);margin:0 0 16px;font-size:.9rem}
 .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
@@ -22,7 +22,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem
 #orden{display:contents}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
-table{width:100%;border-collapse:collapse;min-width:850px;font-size:.82rem}
+table{width:100%;border-collapse:collapse;min-width:900px;font-size:.82rem}
 th,td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-weight:700;color:var(--mut);font-size:.85rem;user-select:none}
 th abbr{text-decoration:none;border-bottom:1px dotted var(--mut);cursor:help}
@@ -35,25 +35,35 @@ td.name{font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;c
 td.name:hover{text-decoration:underline}
 td.name i{display:block;height:3px;margin-top:4px;background:var(--blue);border-radius:2px;opacity:.7}
 td.key{font-weight:700;background:rgba(30,91,184,0.08)}
-@media(prefers-color-scheme:dark){td.key{background:rgba(106,163,255,0.12)}}
+td.media-col{font-weight:900;font-size:.9rem;color:var(--ink);background:rgba(240,180,41,0.15)}
+@media(prefers-color-scheme:dark){
+  td.key{background:rgba(106,163,255,0.12)}
+  td.media-col{background:rgba(240,180,41,0.2)}
+}
 .empty{padding:32px;text-align:center;color:var(--mut)}
 
-/* ESTILOS DE LA CARTA FUT / FIFA */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
+/* MODAL Y CARTA MULTI-VISTA (FIFA & HEXÁGONO PRO 6) */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .modal-overlay.active{opacity:1;pointer-events:auto}
-.fut-card{width:300px;height:450px;background:linear-gradient(135deg, #e5c07b 0%, #b38728 50%, #fbf5b7 100%);border-radius:18px 18px 90px 90px;padding:18px;color:#222;box-shadow:0 15px 35px rgba(0,0,0,0.6);border:4px solid #fbf5b7;position:relative;font-family:"Barlow Condensed",sans-serif;display:flex;flex-direction:column;justify-content:space-between;transform:scale(0.9);transition:transform .2s ease}
+.card-container{position:relative;width:320px;display:flex;flex-direction:column;align-items:center}
+
+.view-toggle{display:flex;background:#111;border:2px solid #e5c07b;border-radius:20px;margin-bottom:12px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.5)}
+.view-toggle button{background:transparent;color:#bbb;border:none;padding:6px 16px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all .2s}
+.view-toggle button.active{background:#e5c07b;color:#111}
+
+.fut-card{width:300px;height:450px;background:linear-gradient(135deg, #e5c07b 0%, #b38728 50%, #fbf5b7 100%);border-radius:18px 18px 90px 90px;padding:18px;color:#222;box-shadow:0 15px 35px rgba(0,0,0,0.6);border:4px solid #fbf5b7;position:relative;font-family:"Barlow Condensed",sans-serif;display:flex;flex-direction:column;justify-content:space-between;transform:scale(0.95);transition:transform .2s ease}
 .modal-overlay.active .fut-card{transform:scale(1)}
-.fut-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid rgba(0,0,0,0.15);padding-bottom:8px}
-.fut-rating-box{text-align:center;line-height:1}
-.fut-rating{font-size:3.2rem;font-weight:900;letter-spacing:-1px}
-.fut-pos{font-size:1.2rem;font-weight:700;text-transform:uppercase}
-.fut-badge{font-size:2.2rem}
-.fut-name{text-align:center;font-size:1.8rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:8px 0;border-bottom:2px solid rgba(0,0,0,0.15);padding-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fut-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:0 8px}
-.fut-stat-item{display:flex;justify-content:space-between;align-items:center;font-size:1.2rem;font-weight:700}
-.fut-stat-val{font-size:1.4rem;font-weight:900}
-.fut-footer{text-align:center;font-size:0.8rem;font-weight:700;color:rgba(0,0,0,0.6);text-transform:uppercase;margin-top:auto}
-.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border:2px solid #fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+
+/* CARTA PRO 6 (HEXÁGONO) */
+.pes-card{background:linear-gradient(135deg, #1b2838 0%, #0d131d 100%);color:#fff;border-color:#3a546e}
+.pes-card .fut-name{border-color:rgba(255,255,255,0.2);color:#00ffff}
+.pes-card .fut-header{border-color:rgba(255,255,255,0.2)}
+.pes-card .fut-footer{color:rgba(255,255,255,0.6)}
+
+.hexagon-wrapper{position:relative;width:240px;height:240px;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.hexagon-svg{width:100%;height:100%}
+
+.close-btn{position:absolute;top:-14px;right:-14px;background:#000;color:#fff;border:2px solid #fff;border-radius:50%;width:34px;height:34px;cursor:pointer;font-weight:bold;font-size:1.1rem;display:flex;align-items:center;justify-content:center;z-index:10}
 </style>
 </head>
 <body>
@@ -68,29 +78,83 @@ td.key{font-weight:700;background:rgba(30,91,184,0.08)}
   </div>
 </main>
 
-<!-- MODAL CARTA FIFA -->
+<!-- MODAL CARTA CON SELECTOR DE VISTA (FIFA / PRO 6) -->
 <div class="modal-overlay" id="modal" onclick="cerrarCarta(event)">
-  <div class="fut-card" onclick="event.stopPropagation()">
+  <div class="card-container" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="cerrarCartaDirecto()">✕</button>
-    <div>
-      <div class="fut-header">
-        <div class="fut-rating-box">
-          <div class="fut-rating" id="card-rat">85</div>
-          <div class="fut-pos" id="card-pos">MED</div>
-        </div>
-        <div class="fut-badge">⚽</div>
-      </div>
-      <div class="fut-name" id="card-name">JUGADOR</div>
-      <div class="fut-stats">
-        <div class="fut-stat-item"><span class="fut-stat-val" id="card-ata">80</span> <span>ATA</span></div>
-        <div class="fut-stat-item"><span class="fut-stat-val" id="card-def">75</span> <span>DEF</span></div>
-        <div class="fut-stat-item"><span class="fut-stat-val" id="card-pas">82</span> <span>PAS</span></div>
-        <div class="fut-stat-item"><span class="fut-stat-val" id="card-gk">50</span> <span>POR</span></div>
-        <div class="fut-stat-item"><span class="fut-stat-val" id="card-gan">88</span> <span>VIC</span></div>
-        <div class="fut-stat-item"><span class="fut-stat-val" id="card-mvp">70</span> <span>MVP</span></div>
-      </div>
+    
+    <!-- SELECTOR DE VISTA -->
+    <div class="view-toggle">
+      <button id="btn-view-fifa" class="active" onclick="cambiarVista('fifa')">🎴 CARTA FIFA</button>
+      <button id="btn-view-pes" onclick="cambiarVista('pes')">⬢ HEXÁGONO PRO 6</button>
     </div>
-    <div class="fut-footer" id="card-mod">MODALIDAD TOTAL</div>
+
+    <!-- VISTA FIFA -->
+    <div class="fut-card" id="card-fifa-view">
+      <div>
+        <div class="fut-header">
+          <div class="fut-rating-box">
+            <div class="fut-rating" id="card-rat">85</div>
+            <div class="fut-pos" id="card-pos">MED</div>
+          </div>
+          <div class="fut-badge">⚽</div>
+        </div>
+        <div class="fut-name" id="card-name">JUGADOR</div>
+        <div class="fut-stats">
+          <div class="fut-stat-item"><span class="fut-stat-val" id="card-ata">80</span> <span>ATA</span></div>
+          <div class="fut-stat-item"><span class="fut-stat-val" id="card-def">75</span> <span>DEF</span></div>
+          <div class="fut-stat-item"><span class="fut-stat-val" id="card-pas">82</span> <span>PAS</span></div>
+          <div class="fut-stat-item"><span class="fut-stat-val" id="card-gk">50</span> <span>POR</span></div>
+          <div class="fut-stat-item"><span class="fut-stat-val" id="card-gan">88</span> <span>VIC</span></div>
+          <div class="fut-stat-item"><span class="fut-stat-val" id="card-mvp">70</span> <span>MVP</span></div>
+        </div>
+      </div>
+      <div class="fut-footer" id="card-mod">MODALIDAD TOTAL</div>
+    </div>
+
+    <!-- VISTA PRO 6 (HEXÁGONO) -->
+    <div class="fut-card pes-card" id="card-pes-view" style="display:none;">
+      <div>
+        <div class="fut-header">
+          <div class="fut-rating-box">
+            <div class="fut-rating" id="pes-rat" style="color:#00ffff;">85</div>
+            <div class="fut-pos" id="pes-pos">MED</div>
+          </div>
+          <div class="fut-badge">🎮</div>
+        </div>
+        <div class="fut-name" id="pes-name">JUGADOR</div>
+        
+        <!-- SVG HEXÁGONO PRO 6 -->
+        <div class="hexagon-wrapper">
+          <svg class="hexagon-svg" viewBox="0 0 200 200">
+            <!-- Guías concéntricas del hexágono -->
+            <polygon points="100,20 169.28,60 169.28,140 100,180 30.72,140 30.72,60" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            <polygon points="100,40 151.96,70 151.96,130 100,160 48.04,130 48.04,70" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            <polygon points="100,60 134.64,80 134.64,120 100,140 65.36,120 65.36,80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            
+            <!-- Ejes -->
+            <line x1="100" y1="100" x2="100" y2="20" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+            <line x1="100" y1="100" x2="169.28" y2="60" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+            <line x1="100" y1="100" x2="169.28" y2="140" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+            <line x1="100" y1="100" x2="100" y2="180" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+            <line x1="100" y1="100" x2="30.72" y2="140" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+            <line x1="100" y1="100" x2="30.72" y2="60" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+
+            <!-- Polígono de datos del jugador -->
+            <polygon id="pes-polygon" points="100,100 100,100 100,100 100,100 100,100 100,100" fill="rgba(0, 255, 255, 0.4)" stroke="#00ffff" stroke-width="2"/>
+
+            <!-- Etiquetas del Hexágono -->
+            <text x="100" y="14" fill="#ffcc00" font-size="10" font-weight="bold" text-anchor="middle">ATAQUE</text>
+            <text x="176" y="58" fill="#fff" font-size="9" text-anchor="start">VIC</text>
+            <text x="176" y="145" fill="#fff" font-size="9" text-anchor="start">PAS</text>
+            <text x="100" y="194" fill="#ffcc00" font-size="10" font-weight="bold" text-anchor="middle">DEFENSA</text>
+            <text x="24" y="145" fill="#fff" font-size="9" text-anchor="end">POR</text>
+            <text x="24" y="58" fill="#fff" font-size="9" text-anchor="end">MVP</text>
+          </svg>
+        </div>
+      </div>
+      <div class="fut-footer" id="pes-mod">MODALIDAD TOTAL</div>
+    </div>
   </div>
 </div>
 
@@ -101,6 +165,7 @@ const MODS = ["1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7"];
 const CON_PORTERO = ["5v5", "6v6", "7v7", "full"];
 
 const ETIQUETA = {
+  media: { name: "MEDIA GENERAL (Basada en rendimiento ponderado)" },
   matches: { icon: "🎮", name: "Partidos Jugados (PJ)" },
   goals: { icon: "⚽", name: "Goles" },
   assists: { icon: "🅰️", name: "Asistencias" },
@@ -120,6 +185,7 @@ const ETIQUETA = {
 };
 
 const ORDEN = {
+  media: "MEDIA",
   goals: "⚽ Goles",
   assists: "🅰️ Asistencias",
   ga: "⚽+🅰️ G+A",
@@ -136,14 +202,16 @@ const ORDEN = {
   cleanSheets: "🔒 P. Cero"
 };
 
-const BASE = ["matches", "goals", "assists", "ga", "gpm", "mvp", "passesTotal", "passPct", "recoveries", "wins", "wr"];
+// MEDIA va siempre en primer lugar en la tabla
+const BASE = ["media", "matches", "goals", "assists", "ga", "gpm", "mvp", "passesTotal", "passPct", "recoveries", "wins", "wr"];
 
 function columnas(t) {
   if (t === "total") return [...BASE, "bestStreak", "saves", "cleanSheets"];
   return [...BASE, "streak", "bestStreak", "elo", ...(CON_PORTERO.includes(t) ? ["saves", "cleanSheets"] : [])];
 }
 
-let data = [], tab = "total", key = "goals", cargando = true, error = "";
+let data = [], tab = "total", key = "media", cargando = true, error = "";
+let jugadorSeleccionado = null;
 
 const num = (v) => (typeof v === "number" && isFinite(v) ? v : 0);
 
@@ -185,6 +253,20 @@ function vista(p, t) {
   r.gpm = r.matches ? r.goals / r.matches : 0;
   r.wr = r.matches ? (r.wins / r.matches) * 100 : 0;
   r.passPct = r.passesTotal ? Math.round((r.passesCompleted / r.passesTotal) * 100) : 0;
+
+  // Cálculo de MEDIA sobre 100
+  const pjTotales = r.matches || 1;
+  const pjPases = r.matchesPasses || (t !== "1v1" ? pjTotales : 0);
+  const pjGK = r.matchesGK || (CON_PORTERO.includes(t) ? pjTotales : 0);
+
+  const ata = Math.min(99, Math.round(((r.ga / pjTotales) / 1.5) * 100));
+  const def = Math.min(99, Math.round(((r.recoveries / pjTotales) / 4) * 100));
+  const volPases = pjPases > 0 ? (r.passesTotal / pjPases) : 0;
+  const pas = Math.min(99, Math.round((r.passPct * 0.6) + (Math.min(1, volPases / 15) * 40)));
+  const gan = Math.min(99, Math.round((r.wr * 0.7) + (Math.min(10, r.bestStreak) * 3)));
+  const mvpVal = Math.min(99, Math.round(((r.mvp / pjTotales) / 0.5) * 100));
+
+  r.media = Math.round((ata + def + pas + gan + mvpVal) / 5);
   return r;
 }
 
@@ -231,36 +313,43 @@ function elegirTab(t) {
   render();
 }
 
+function cambiarVista(modoVista) {
+  if (modoVista === 'fifa') {
+    $("card-fifa-view").style.display = "flex";
+    $("card-pes-view").style.display = "none";
+    $("btn-view-fifa").classList.add("active");
+    $("btn-view-pes").classList.remove("active");
+  } else {
+    $("card-fifa-view").style.display = "none";
+    $("card-pes-view").style.display = "flex";
+    $("btn-view-pes").classList.add("active");
+    $("btn-view-fifa").classList.remove("active");
+  }
+}
+
 function abrirCarta(pData) {
+  jugadorSeleccionado = pData;
   const pjTotales = pData.matches || 1;
   const pjPases = pData.matchesPasses || (tab !== "1v1" ? pjTotales : 0);
   const pjGK = pData.matchesGK || (CON_PORTERO.includes(tab) ? pjTotales : 0);
 
-  // Fórmulas Ponderadas sobre 100 con filtros por modalidad
+  // Fórmulas Ponderadas sobre 100
   const ata = Math.min(99, Math.round(((pData.ga / pjTotales) / 1.5) * 100));
   const def = Math.min(99, Math.round(((pData.recoveries / pjTotales) / 4) * 100));
-  
-  // Pases: Ponderado únicamente entre partidos de 2v2 en adelante
   const volPases = pjPases > 0 ? (pData.passesTotal / pjPases) : 0;
   const pas = Math.min(99, Math.round((pData.passPct * 0.6) + (Math.min(1, volPases / 15) * 40)));
-
-  // Portero: Ponderado únicamente entre partidos de 5v5 en adelante
-  const por = pjGK > 0 
-    ? Math.min(99, Math.round(((pData.saves / pjGK) / 3) * 70 + ((pData.cleanSheets / pjGK) * 30))) 
-    : 50;
-
+  const por = pjGK > 0 ? Math.min(99, Math.round(((pData.saves / pjGK) / 3) * 70 + ((pData.cleanSheets / pjGK) * 30))) : 50;
   const gan = Math.min(99, Math.round((pData.wr * 0.7) + (Math.min(10, pData.bestStreak) * 3)));
   const mvp = Math.min(99, Math.round(((pData.mvp / pjTotales) / 0.5) * 100));
 
-  // Rating General Promedio
-  const rat = Math.round((ata + def + pas + gan + mvp) / 5);
+  const rat = pData.media;
 
-  // Posición estimada
   let pos = "MED";
   if (ata > def && ata > por) pos = "DEL";
   else if (def > ata && def > por) pos = "DEF";
   else if (por > 65) pos = "POR";
 
+  // Rellenar Carta FIFA
   $("card-name").textContent = pData.name;
   $("card-rat").textContent = rat;
   $("card-pos").textContent = pos;
@@ -271,6 +360,28 @@ function abrirCarta(pData) {
   $("card-gan").textContent = gan;
   $("card-mvp").textContent = mvp;
   $("card-mod").textContent = "MODALIDAD " + nombreTab(tab).toUpperCase();
+
+  // Rellenar Carta PRO 6 (Hexágono)
+  $("pes-name").textContent = pData.name;
+  $("pes-rat").textContent = rat;
+  $("pes-pos").textContent = pos;
+  $("pes-mod").textContent = "MODALIDAD " + nombreTab(tab).toUpperCase();
+
+  // Calcular puntos del polígono SVG en el hexágono
+  // Orden del Hexágono (reloj): 0: ATA (arriba), 1: VIC, 2: PAS, 3: DEF (abajo), 4: POR, 5: MVP
+  const statsArr = [ata, gan, pas, def, por, mvp];
+  const angles = [-Math.PI / 2, -Math.PI / 6, Math.PI / 6, Math.PI / 2, (5 * Math.PI) / 6, (-5 * Math.PI) / 6];
+  const center = 100;
+  const maxRadius = 80;
+
+  const points = statsArr.map((val, idx) => {
+    const r = (val / 100) * maxRadius;
+    const x = center + r * Math.cos(angles[idx]);
+    const y = center + r * Math.sin(angles[idx]);
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(" ");
+
+  $("pes-polygon").setAttribute("points", points);
 
   $("modal").classList.add("active");
 }
@@ -286,14 +397,14 @@ function cerrarCartaDirecto() {
 function render() {
   if (!tabsDisponibles().includes(tab)) tab = "total";
   const cols = columnas(tab);
-  if (!cols.includes(key) || !ORDEN[key]) key = "goals";
+  if (!cols.includes(key) || !ORDEN[key]) key = "media";
   pintarTabs();
   pintarOrden(cols);
 
   const q = $("q").value.trim().toLowerCase();
   const todos = data.map((p) => vista(p, tab)).filter(Boolean);
   const list = todos.filter((p) => p.name.toLowerCase().includes(q))
-    .sort((a, b) => b[key] - a[key] || b.ga - a.ga || a.name.localeCompare(b.name));
+    .sort((a, b) => b[key] - a[key] || b.media - a.media || a.name.localeCompare(b.name));
   const max = Math.max(1, ...list.map((p) => p[key]));
 
   const head = $("head"); head.textContent = "";
@@ -304,11 +415,15 @@ function render() {
 
   cols.forEach((c) => {
     const th = document.createElement("th");
-    const item = ETIQUETA[c];
-    const abbr = document.createElement("abbr");
-    abbr.title = item.name;
-    abbr.textContent = item.icon;
-    th.append(abbr);
+    if (c === "media") {
+      th.innerHTML = "<strong>MEDIA</strong>";
+    } else {
+      const item = ETIQUETA[c];
+      const abbr = document.createElement("abbr");
+      abbr.title = item.name;
+      abbr.textContent = item.icon;
+      th.append(abbr);
+    }
     hr.append(th);
   });
   head.append(hr);
@@ -320,14 +435,18 @@ function render() {
     const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
     
     const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
-    nm.title = "Haz clic para ver la carta FIFA de " + p.name;
+    nm.title = "Haz clic para ver la carta FIFA / Pro 6 de " + p.name;
     nm.addEventListener("click", () => abrirCarta(p));
     
     const bar = document.createElement("i"); bar.style.width = (p[key] / max) * 100 + "%"; nm.append(bar); tr.append(nm);
     cols.forEach((k) => { 
       const td = document.createElement("td"); 
       td.textContent = fmt(k, p[k]); 
-      if (k === key) td.className = "key"; 
+      if (k === "media") {
+        td.className = "media-col";
+      } else if (k === key) {
+        td.className = "key"; 
+      }
       tr.append(td); 
     });
     tb.append(tr);
