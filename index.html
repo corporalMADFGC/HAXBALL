@@ -226,8 +226,8 @@ td.media-col{font-weight:800;font-size:0.9rem;color:var(--ink)}
 <script>
 const $ = (id) => document.getElementById(id);
 
-const MODS = ["1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7"];
-const CON_PORTERO = ["5v5", "6v6", "7v7", "full"];
+const TABS_LISTA = ["1v1", "2v2", "3v3", "4v4", "5y6v", "7v7", "+7v", "total"];
+const CON_PORTERO = ["5v5", "6v6", "5y6v", "7v7", "full", "+7v"];
 
 const ETIQUETA = {
   media: { icon: "MEDIA", name: "Media General (Ponderada sobre 100)" },
@@ -307,17 +307,38 @@ function calcularAtributos(pData) {
 function vista(p, t) {
   const mods = modsDe(p);
   let r;
+
+  // Mapear qué modalidades del JSON entran en cada pestaña
+  let targetKeys = [];
   if (t === "total") {
+    targetKeys = Object.keys(mods);
+  } else if (t === "5y6v") {
+    targetKeys = ["5v5", "6v6"];
+  } else if (t === "+7v") {
+    targetKeys = Object.keys(mods).filter(k => k === "full" || (!["1v1","2v2","3v3","4v4","5v5","6v6","7v7"].includes(k)));
+  } else {
+    targetKeys = [t];
+  }
+
+  if (t === "total" || t === "5y6v" || t === "+7v") {
     r = { matches: 0, goals: 0, assists: 0, wins: 0, saves: 0, cleanSheets: 0, streak: 0, bestStreak: 0, elo: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, matchesPasses: 0, matchesGK: 0 };
-    for (const [mKey, m] of Object.entries(mods)) {
+    let totalElo = 0, countElo = 0;
+
+    for (const mKey of targetKeys) {
+      const m = mods[mKey];
+      if (!m) continue;
       const pjMod = num(m.matches);
-      for (const k of ["matches", "goals", "assists", "wins", "saves", "cleanSheets", "passesTotal", "passesCompleted", "recoveries", "mvp"]) r[k] += num(m[k]);
+      for (const k of ["matches", "goals", "assists", "wins", "saves", "cleanSheets", "passesTotal", "passesCompleted", "recoveries", "mvp"]) {
+        r[k] += num(m[k]);
+      }
       r.streak = Math.max(r.streak, num(m.streak));
       r.bestStreak = Math.max(r.bestStreak, num(m.bestStreak));
+      if (m.elo != null) { totalElo += num(m.elo); countElo++; }
 
       if (mKey !== "1v1") r.matchesPasses += pjMod;
       if (CON_PORTERO.includes(mKey)) r.matchesGK += pjMod;
     }
+    r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
   } else {
     const m = mods[t];
     if (!m) return null;
@@ -332,6 +353,7 @@ function vista(p, t) {
       matchesGK: CON_PORTERO.includes(t) ? pjMod : 0
     };
   }
+
   if (!(r.matches || r.goals || r.assists || r.wins || r.saves || r.cleanSheets || r.passesTotal || r.recoveries || r.mvp)) return null;
   r.name = String(p && p.name != null ? p.name : "?");
   r.avatar = p && p.avatar ? p.avatar : r.name.substring(0, 2).toUpperCase();
@@ -353,10 +375,7 @@ function fmt(k, v) {
 }
 
 function tabsDisponibles() {
-  const lista = [...MODS];
-  if (data.some((p) => modsDe(p).full)) lista.push("full");
-  lista.push("total");
-  return lista;
+  return TABS_LISTA;
 }
 
 const nombreTab = (t) => (t === "total" ? "Total" : t);
@@ -522,7 +541,7 @@ function render() {
 
 function tabDeHash() {
   const h = (typeof location !== "undefined" ? location.hash : "").replace("#", "");
-  return h === "total" || MODS.includes(h) || h === "full" ? h : null;
+  return TABS_LISTA.includes(h) ? h : null;
 }
 
 function mensajeError(e) {
