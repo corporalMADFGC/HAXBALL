@@ -31,11 +31,29 @@ tr:last-child td{border-bottom:0}
 td.pos{color:var(--mut);width:1%;font-variant-numeric:tabular-nums;font-weight:600}
 tr.top td.pos{color:var(--gold);font-weight:700}
 td{font-variant-numeric:tabular-nums}
-td.name{font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+td.name{font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--blue)}
+td.name:hover{text-decoration:underline}
 td.name i{display:block;height:3px;margin-top:4px;background:var(--blue);border-radius:2px;opacity:.7}
 td.key{font-weight:700;background:rgba(30,91,184,0.08)}
 @media(prefers-color-scheme:dark){td.key{background:rgba(106,163,255,0.12)}}
 .empty{padding:32px;text-align:center;color:var(--mut)}
+
+/* ESTILOS DE LA CARTA FUT / FIFA */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.modal-overlay.active{opacity:1;pointer-events:auto}
+.fut-card{width:300px;height:450px;background:linear-gradient(135deg, #e5c07b 0%, #b38728 50%, #fbf5b7 100%);border-radius:18px 18px 90px 90px;padding:18px;color:#222;box-shadow:0 15px 35px rgba(0,0,0,0.6);border:4px solid #fbf5b7;position:relative;font-family:"Barlow Condensed",sans-serif;display:flex;flex-direction:column;justify-content:space-between;transform:scale(0.9);transition:transform .2s ease}
+.modal-overlay.active .fut-card{transform:scale(1)}
+.fut-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid rgba(0,0,0,0.15);padding-bottom:8px}
+.fut-rating-box{text-align:center;line-height:1}
+.fut-rating{font-size:3.2rem;font-weight:900;letter-spacing:-1px}
+.fut-pos{font-size:1.2rem;font-weight:700;text-transform:uppercase}
+.fut-badge{font-size:2.2rem}
+.fut-name{text-align:center;font-size:1.8rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:8px 0;border-bottom:2px solid rgba(0,0,0,0.15);padding-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fut-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:0 8px}
+.fut-stat-item{display:flex;justify-content:space-between;align-items:center;font-size:1.2rem;font-weight:700}
+.fut-stat-val{font-size:1.4rem;font-weight:900}
+.fut-footer{text-align:center;font-size:0.8rem;font-weight:700;color:rgba(0,0,0,0.6);text-transform:uppercase;margin-top:auto}
+.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border:2px solid #fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -49,14 +67,39 @@ td.key{font-weight:700;background:rgba(30,91,184,0.08)}
     <div class="empty" id="empty" hidden></div>
   </div>
 </main>
+
+<!-- MODAL CARTA FIFA -->
+<div class="modal-overlay" id="modal" onclick="cerrarCarta(event)">
+  <div class="fut-card" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="cerrarCartaDirecto()">✕</button>
+    <div>
+      <div class="fut-header">
+        <div class="fut-rating-box">
+          <div class="fut-rating" id="card-rat">85</div>
+          <div class="fut-pos" id="card-pos">MED</div>
+        </div>
+        <div class="fut-badge">⚽</div>
+      </div>
+      <div class="fut-name" id="card-name">JUGADOR</div>
+      <div class="fut-stats">
+        <div class="fut-stat-item"><span class="fut-stat-val" id="card-ata">80</span> <span>ATA</span></div>
+        <div class="fut-stat-item"><span class="fut-stat-val" id="card-def">75</span> <span>DEF</span></div>
+        <div class="fut-stat-item"><span class="fut-stat-val" id="card-pas">82</span> <span>PAS</span></div>
+        <div class="fut-stat-item"><span class="fut-stat-val" id="card-gk">50</span> <span>POR</span></div>
+        <div class="fut-stat-item"><span class="fut-stat-val" id="card-gan">88</span> <span>VIC</span></div>
+        <div class="fut-stat-item"><span class="fut-stat-val" id="card-mvp">70</span> <span>MVP</span></div>
+      </div>
+    </div>
+    <div class="fut-footer" id="card-mod">MODALIDAD TOTAL</div>
+  </div>
+</div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 
-// Modalidades (pestañas). "Total" va siempre la última. "full" solo aparece si hay datos.
 const MODS = ["1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7"];
 const CON_PORTERO = ["5v5", "6v6", "7v7", "full"];
 
-// Iconos y etiquetas con Tooltips completos (al pasar el cursor o pulsar)
 const ETIQUETA = {
   matches: { icon: "🎮", name: "Partidos Jugados (PJ)" },
   goals: { icon: "⚽", name: "Goles" },
@@ -95,9 +138,9 @@ const ORDEN = {
 
 const BASE = ["matches", "goals", "assists", "ga", "gpm", "mvp", "passesTotal", "passPct", "recoveries", "wins", "wr"];
 
-function columnas(tab) {
-  if (tab === "total") return [...BASE, "bestStreak", "saves", "cleanSheets"];
-  return [...BASE, "streak", "bestStreak", "elo", ...(CON_PORTERO.includes(tab) ? ["saves", "cleanSheets"] : [])];
+function columnas(t) {
+  if (t === "total") return [...BASE, "bestStreak", "saves", "cleanSheets"];
+  return [...BASE, "streak", "bestStreak", "elo", ...(CON_PORTERO.includes(t) ? ["saves", "cleanSheets"] : [])];
 }
 
 let data = [], tab = "total", key = "goals", cargando = true, error = "";
@@ -181,6 +224,48 @@ function elegirTab(t) {
   render();
 }
 
+function abrirCarta(pData) {
+  const pj = pData.matches || 1;
+
+  // Fórmulas Ponderadas sobre 100 por partido
+  const ata = Math.min(99, Math.round(((pData.ga / pj) / 1.5) * 100));
+  const def = Math.min(99, Math.round(((pData.recoveries / pj) / 4) * 100));
+  const pas = Math.min(99, Math.round((pData.passPct * 0.6) + (Math.min(1, (pData.passesTotal / pj) / 15) * 40)));
+  const por = pData.saves > 0 ? Math.min(99, Math.round(((pData.saves / pj) / 3) * 70 + ((pData.cleanSheets / pj) * 30))) : 50;
+  const gan = Math.min(99, Math.round((pData.wr * 0.7) + (Math.min(10, pData.bestStreak) * 3)));
+  const mvp = Math.min(99, Math.round(((pData.mvp / pj) / 0.5) * 100));
+
+  // Rating General Promedio
+  const rat = Math.round((ata + def + pas + gan + mvp) / 5);
+
+  // Posición estimada
+  let pos = "MED";
+  if (ata > def && ata > por) pos = "DEL";
+  else if (def > ata && def > por) pos = "DEF";
+  else if (por > 65) pos = "POR";
+
+  $("card-name").textContent = pData.name;
+  $("card-rat").textContent = rat;
+  $("card-pos").textContent = pos;
+  $("card-ata").textContent = ata;
+  $("card-def").textContent = def;
+  $("card-pas").textContent = pas;
+  $("card-gk").textContent = por;
+  $("card-gan").textContent = gan;
+  $("card-mvp").textContent = mvp;
+  $("card-mod").textContent = "MODALIDAD " + nombreTab(tab).toUpperCase();
+
+  $("modal").classList.add("active");
+}
+
+function cerrarCarta(e) {
+  if (e.target.id === "modal") $("modal").classList.remove("active");
+}
+
+function cerrarCartaDirecto() {
+  $("modal").classList.remove("active");
+}
+
 function render() {
   if (!tabsDisponibles().includes(tab)) tab = "total";
   const cols = columnas(tab);
@@ -216,7 +301,11 @@ function render() {
     const tr = document.createElement("tr");
     if (i < 3 && p[key] > 0) tr.className = "top";
     const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
+    
     const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
+    nm.title = "Haz clic para ver la carta FIFA de " + p.name;
+    nm.addEventListener("click", () => abrirCarta(p));
+    
     const bar = document.createElement("i"); bar.style.width = (p[key] / max) * 100 + "%"; nm.append(bar); tr.append(nm);
     cols.forEach((k) => { 
       const td = document.createElement("td"); 
