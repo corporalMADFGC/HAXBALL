@@ -9,13 +9,17 @@
 @media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe UI",system-ui,sans-serif}
-main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+main{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
 h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2.4rem,8vw,4rem);line-height:1;margin:0 0 4px;font-weight:700;letter-spacing:.01em}
-.sub{color:var(--mut);margin:0 0 24px}
+.sub{color:var(--mut);margin:0 0 20px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.tabs button{flex:0 0 auto;font:inherit;font-weight:600;padding:8px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .bar button{font:inherit;padding:8px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
 .bar button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .bar input{flex:1;min-width:140px;font:inherit;padding:8px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
+#orden{display:contents}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
 table{width:100%;border-collapse:collapse;min-width:560px}
@@ -36,34 +40,129 @@ td.key{font-weight:700}
 <main>
   <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
   <p class="sub" id="sub">Cargando…</p>
-  <div class="bar" id="bar">
-    <button data-k="goals" aria-pressed="true">Goleadores</button>
-    <button data-k="assists" aria-pressed="false">Asistentes</button>
-    <button data-k="ga" aria-pressed="false">Goles + asist.</button>
-    <button data-k="matches" aria-pressed="false">Partidos</button>
-    <button data-k="wins" aria-pressed="false">Victorias</button>
-    <input id="q" type="search" placeholder="Buscar jugador" aria-label="Buscar jugador">
+  <div class="tabs" id="tabs" role="tablist" aria-label="Modalidad"></div>
+  <div class="bar"><span id="orden"></span><input id="q" type="search" placeholder="Buscar jugador" aria-label="Buscar jugador"></div>
+  <div class="wrap">
+    <table><thead id="head"></thead><tbody id="rows"></tbody></table>
+    <div class="empty" id="empty" hidden></div>
   </div>
-  <div class="wrap"><table><thead><tr>
-    <th>#</th><th>Jugador</th><th>PJ</th><th>Goles</th><th>Asist.</th><th>G+A</th><th>Goles/PJ</th><th>Vict.</th><th>% Vict.</th>
-  </tr></thead><tbody id="rows"></tbody></table><div class="empty" id="empty" hidden>Aún no hay partidas registradas. Juega una partida completa en la sala y aparecerá aquí.</div></div>
 </main>
 <script>
-let data = [], key = "goals";
 const $ = (id) => document.getElementById(id);
-const COLS = ["matches", "goals", "assists", "ga", "gpm", "wins", "wr"];
 
-function prep(p) {
-  const ga = p.goals + p.assists;
-  return { ...p, ga, gpm: p.matches ? p.goals / p.matches : 0, wr: p.matches ? (p.wins / p.matches) * 100 : 0 };
+// Modalidades (pestañas). "Total" va siempre la última. "full" solo aparece si hay datos.
+const MODS = ["1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7"];
+const CON_PORTERO = ["5v5", "6v6", "7v7", "full"];
+
+const ETIQUETA = {
+  matches: "PJ", goals: "Goles", assists: "Asist.", ga: "G+A", gpm: "Goles/PJ", wins: "Vict.", wr: "% Vict.",
+  streak: "Racha", bestStreak: "Mejor racha", elo: "ELO", saves: "Paradas", cleanSheets: "Porterías a 0"
+};
+const ORDEN = {
+  goals: "Goleadores", assists: "Asistentes", ga: "Goles + asist.", matches: "Partidos", wins: "Victorias",
+  streak: "Racha", bestStreak: "Mejor racha", elo: "ELO", saves: "Paradas", cleanSheets: "Porterías a 0"
+};
+const BASE = ["matches", "goals", "assists", "ga", "gpm", "wins", "wr"];
+
+function columnas(tab) {
+  if (tab === "total") return [...BASE, "bestStreak", "saves", "cleanSheets"]; // el ELO no se suma entre modalidades
+  return [...BASE, "streak", "bestStreak", "elo", ...(CON_PORTERO.includes(tab) ? ["saves", "cleanSheets"] : [])];
 }
+
+let data = [], tab = "total", key = "goals";
+
+const num = (v) => (typeof v === "number" && isFinite(v) ? v : 0);
+
+// Formato actual: { name, modalidades: { "3v3": {...}, ... } }. Si llega el formato antiguo (sin modalidades), solo cuenta en Total.
+function modsDe(p) {
+  return p && p.modalidades && typeof p.modalidades === "object" ? p.modalidades : { antiguo: p || {} };
+}
+
+// Estadísticas de un jugador en una pestaña (null si no ha jugado nada ahí)
+function vista(p, t) {
+  const mods = modsDe(p);
+  let r;
+  if (t === "total") {
+    r = { matches: 0, goals: 0, assists: 0, wins: 0, saves: 0, cleanSheets: 0, streak: 0, bestStreak: 0, elo: 0 };
+    for (const m of Object.values(mods)) {
+      for (const k of ["matches", "goals", "assists", "wins", "saves", "cleanSheets"]) r[k] += num(m[k]);
+      r.streak = Math.max(r.streak, num(m.streak));
+      r.bestStreak = Math.max(r.bestStreak, num(m.bestStreak));
+    }
+  } else {
+    const m = mods[t];
+    if (!m) return null;
+    r = {
+      matches: num(m.matches), goals: num(m.goals), assists: num(m.assists), wins: num(m.wins),
+      saves: num(m.saves), cleanSheets: num(m.cleanSheets), streak: num(m.streak), bestStreak: num(m.bestStreak),
+      elo: m.elo == null ? 1000 : num(m.elo)
+    };
+  }
+  if (!(r.matches || r.goals || r.assists || r.wins || r.saves || r.cleanSheets)) return null;
+  r.name = String(p && p.name != null ? p.name : "?");
+  r.ga = r.goals + r.assists;
+  r.gpm = r.matches ? r.goals / r.matches : 0;
+  r.wr = r.matches ? (r.wins / r.matches) * 100 : 0;
+  return r;
+}
+
 function fmt(k, v) { return k === "gpm" ? v.toFixed(2) : k === "wr" ? Math.round(v) + "%" : v; }
 
+function tabsDisponibles() {
+  const lista = [...MODS];
+  if (data.some((p) => modsDe(p).full)) lista.push("full");
+  lista.push("total");
+  return lista;
+}
+
+const nombreTab = (t) => (t === "total" ? "Total" : t);
+
+function pintarTabs() {
+  const cont = $("tabs"); cont.textContent = "";
+  tabsDisponibles().forEach((t) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(t === tab));
+    b.textContent = nombreTab(t);
+    b.addEventListener("click", () => elegirTab(t));
+    cont.append(b);
+  });
+}
+
+function pintarOrden(cols) {
+  const cont = $("orden"); cont.textContent = "";
+  Object.keys(ORDEN).filter((k) => cols.includes(k)).forEach((k) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-pressed", String(k === key));
+    b.textContent = ORDEN[k];
+    b.addEventListener("click", () => { key = k; render(); });
+    cont.append(b);
+  });
+}
+
+function elegirTab(t) {
+  tab = t;
+  if (typeof location !== "undefined") location.hash = t; // enlace directo a la pestaña
+  render();
+}
+
 function render() {
+  if (!tabsDisponibles().includes(tab)) tab = "total";
+  const cols = columnas(tab);
+  if (!cols.includes(key) || !ORDEN[key]) key = "goals";
+  pintarTabs();
+  pintarOrden(cols);
+
   const q = $("q").value.trim().toLowerCase();
-  const list = data.filter((p) => p.name.toLowerCase().includes(q))
+  const todos = data.map((p) => vista(p, tab)).filter(Boolean);
+  const list = todos.filter((p) => p.name.toLowerCase().includes(q))
     .sort((a, b) => b[key] - a[key] || b.ga - a.ga || a.name.localeCompare(b.name));
   const max = Math.max(1, ...list.map((p) => p[key]));
+
+  const head = $("head"); head.textContent = "";
+  const hr = document.createElement("tr");
+  ["#", "Jugador", ...cols.map((c) => ETIQUETA[c])].forEach((t) => { const th = document.createElement("th"); th.textContent = t; hr.append(th); });
+  head.append(hr);
+
   const tb = $("rows"); tb.textContent = "";
   list.forEach((p, i) => {
     const tr = document.createElement("tr");
@@ -71,25 +170,36 @@ function render() {
     const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
     const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
     const bar = document.createElement("i"); bar.style.width = (p[key] / max) * 100 + "%"; nm.append(bar); tr.append(nm);
-    COLS.forEach((k) => { const td = document.createElement("td"); td.textContent = fmt(k, p[k]); if (k === key) td.className = "key"; tr.append(td); });
+    cols.forEach((k) => { const td = document.createElement("td"); td.textContent = fmt(k, p[k]); if (k === key) td.className = "key"; tr.append(td); });
     tb.append(tr);
   });
-  $("empty").hidden = data.length > 0;
-  $("sub").textContent = data.length + " jugadores · " + data.reduce((s, p) => s + p.goals, 0) + " goles registrados";
+
+  const vacio = $("empty");
+  vacio.hidden = list.length > 0;
+  vacio.textContent = data.length === 0
+    ? "Aún no hay partidas registradas. Juega una partida completa en la sala y aparecerá aquí."
+    : todos.length === 0 ? "Todavía no hay datos en esta modalidad." : "Ningún jugador coincide con la búsqueda.";
+
+  $("sub").textContent = todos.length + (todos.length === 1 ? " jugador · " : " jugadores · ") + todos.reduce((s, p) => s + p.goals, 0) + " goles registrados · " +
+    (tab === "total" ? "Total (todas las modalidades)" : "Modalidad " + tab);
+}
+
+function tabDeHash() {
+  const h = (typeof location !== "undefined" ? location.hash : "").replace("#", "");
+  return h === "total" || MODS.includes(h) || h === "full" ? h : null;
 }
 
 async function load() {
-  try { data = (await (await fetch("stats.json?t=" + Date.now())).json()).map(prep); render(); }
-  catch (e) { $("sub").textContent = "No se pudieron cargar las estadísticas"; }
+  try {
+    const json = await (await fetch("stats.json?t=" + Date.now())).json();
+    data = Array.isArray(json) ? json : [];
+    render();
+  } catch (e) { $("sub").textContent = "No se pudieron cargar las estadísticas"; }
 }
 
-$("bar").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (!b) return;
-  key = b.dataset.k;
-  document.querySelectorAll("#bar button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-  render();
-});
 $("q").addEventListener("input", render);
+window.addEventListener("hashchange", () => { const t = tabDeHash(); if (t && t !== tab) { tab = t; render(); } });
+tab = tabDeHash() || "total";
 load(); setInterval(load, 30000);
 </script>
 </body>
