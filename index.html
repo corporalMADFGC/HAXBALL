@@ -69,7 +69,7 @@ function columnas(tab) {
   return [...BASE, "streak", "bestStreak", "elo", ...(CON_PORTERO.includes(tab) ? ["saves", "cleanSheets"] : [])];
 }
 
-let data = [], tab = "total", key = "goals";
+let data = [], tab = "total", key = "goals", cargando = true, error = "";
 
 const num = (v) => (typeof v === "number" && isFinite(v) ? v : 0);
 
@@ -176,12 +176,15 @@ function render() {
 
   const vacio = $("empty");
   vacio.hidden = list.length > 0;
-  vacio.textContent = data.length === 0
-    ? "Aún no hay partidas registradas. Juega una partida completa en la sala y aparecerá aquí."
+  vacio.textContent = cargando ? "Cargando…"
+    : error && data.length === 0 ? error
+    : data.length === 0 ? "Aún no hay partidas registradas. Juega una partida completa en la sala y aparecerá aquí."
     : todos.length === 0 ? "Todavía no hay datos en esta modalidad." : "Ningún jugador coincide con la búsqueda.";
 
-  $("sub").textContent = todos.length + (todos.length === 1 ? " jugador · " : " jugadores · ") + todos.reduce((s, p) => s + p.goals, 0) + " goles registrados · " +
-    (tab === "total" ? "Total (todas las modalidades)" : "Modalidad " + tab);
+  $("sub").textContent = cargando ? "Cargando…"
+    : error && data.length === 0 ? "No se pudieron cargar las estadísticas"
+    : todos.length + (todos.length === 1 ? " jugador · " : " jugadores · ") + todos.reduce((s, p) => s + p.goals, 0) + " goles registrados · " +
+      (tab === "total" ? "Total (todas las modalidades)" : "Modalidad " + tab) + (error ? " · (no se pudo actualizar)" : "");
 }
 
 function tabDeHash() {
@@ -189,17 +192,33 @@ function tabDeHash() {
   return h === "total" || MODS.includes(h) || h === "full" ? h : null;
 }
 
+function mensajeError(e) {
+  if (typeof location !== "undefined" && location.protocol === "file:") {
+    return "Estás abriendo el archivo directamente (doble clic) y el navegador no deja leer stats.json. Ábrelo desde http://localhost:3000 con el bot en marcha, o desde la web publicada en GitHub.";
+  }
+  return "No se pudo leer stats.json (" + (e && e.message ? e.message : "error") + "). Comprueba que está en la misma carpeta que index.html.";
+}
+
 async function load() {
   try {
-    const json = await (await fetch("stats.json?t=" + Date.now())).json();
-    data = Array.isArray(json) ? json : [];
-    render();
-  } catch (e) { $("sub").textContent = "No se pudieron cargar las estadísticas"; }
+    const r = await fetch("stats.json?t=" + Date.now());
+    if (!r.ok) throw new Error("error HTTP " + r.status);
+    let json;
+    try { json = await r.json(); } catch (e) { throw new Error("el archivo no es un JSON válido"); }
+    // Acepta la lista pública (ranking-web/stats.json) y también el objeto completo del bot (HAXBALLHOST/stats.json)
+    data = Array.isArray(json) ? json : (json && typeof json === "object" ? Object.values(json) : []);
+    error = "";
+  } catch (e) {
+    error = mensajeError(e);
+  }
+  cargando = false;
+  render();
 }
 
 $("q").addEventListener("input", render);
 window.addEventListener("hashchange", () => { const t = tabDeHash(); if (t && t !== tab) { tab = t; render(); } });
 tab = tabDeHash() || "total";
+render();   // las pestañas salen siempre, aunque stats.json falle
 load(); setInterval(load, 30000);
 </script>
 </body>
