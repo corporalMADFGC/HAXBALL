@@ -39,7 +39,7 @@ td.media-col{font-weight:800;font-size:0.9rem;color:var(--ink)}
 @media(prefers-color-scheme:dark){td.key{background:rgba(106,163,255,0.12)}}
 .empty{padding:32px;text-align:center;color:var(--mut)}
 
-/* MODAL Y CARTA FIFA FIDELIDAD CAPTURA DE PANTALLA */
+/* MODAL Y CARTA FIFA CON AVATAR HAXBALL */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .modal-overlay.active{opacity:1;pointer-events:auto}
 .card-switcher{display:flex;gap:10px;margin-bottom:12px}
@@ -65,22 +65,37 @@ td.media-col{font-weight:800;font-size:0.9rem;color:var(--ink)}
 }
 .modal-overlay.active .fut-card-gold{transform:scale(1)}
 
-.fut-top{position:relative;height:210px}
-.fut-rating-pos{position:absolute;top:10px;left:10px;text-align:center;line-height:0.9}
+.fut-top{position:relative;height:210px;display:flex;justify-content:space-between;align-items:flex-start}
+.fut-rating-pos{position:absolute;top:10px;left:10px;text-align:center;line-height:0.9;z-index:2}
 .fut-rating{font-size:3.5rem;font-weight:900;letter-spacing:-1px}
 .fut-pos{font-size:1.4rem;font-weight:800;text-transform:uppercase;margin-top:2px}
 
-/* Sombra oscura de jugador */
-.fut-silhouette{
+/* CÍRCULO / AVATAR ESTILO HAXBALL */
+.haxball-avatar-box{
   position:absolute;
-  bottom:0;
-  right:10px;
-  width:170px;
-  height:190px;
-  background: radial-gradient(circle at 50% 30%, #333 0%, #111 70%, #000 100%);
-  clip-path: polygon(30% 0%, 70% 0%, 85% 20%, 100% 40%, 90% 100%, 10% 100%, 0% 40%, 15% 20%);
-  opacity:0.85;
-  border-bottom:2px solid rgba(0,0,0,0.2);
+  right:15px;
+  bottom:5px;
+  width:145px;
+  height:145px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.haxball-circle{
+  width:125px;
+  height:125px;
+  border-radius:50%;
+  background:radial-gradient(circle, #2b70c9 0%, #17427d 100%);
+  border:6px solid #555555;
+  box-shadow:0 8px 18px rgba(0,0,0,0.5), inset 0 0 8px rgba(255,255,255,0.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:2.8rem;
+  font-weight:900;
+  text-shadow:2px 2px 4px rgba(0,0,0,0.8);
+  user-select:none;
 }
 
 .fut-mid{text-align:center;margin-top:10px}
@@ -162,7 +177,11 @@ td.media-col{font-weight:800;font-size:0.9rem;color:var(--ink)}
           <div class="fut-rating" id="card-rat">99</div>
           <div class="fut-pos" id="card-pos">DC</div>
         </div>
-        <div class="fut-silhouette"></div>
+        
+        <!-- AVATAR HAXBALL REAL -->
+        <div class="haxball-avatar-box">
+          <div class="haxball-circle" id="card-avatar-num">7</div>
+        </div>
       </div>
       <div class="fut-mid">
         <div class="fut-name" id="card-name">JUGADOR</div>
@@ -185,16 +204,12 @@ td.media-col{font-weight:800;font-size:0.9rem;color:var(--ink)}
     <div class="hex-container" id="view-pes" onclick="event.stopPropagation()">
       <div class="hex-title" id="hex-name">JUGADOR</div>
       <svg class="hex-svg" viewBox="0 0 200 200">
-        <!-- Fondo Hexágono -->
         <polygon points="100,20 170,60 170,140 100,180 30,140 30,60" fill="none" stroke="#364b6e" stroke-width="2"/>
         <polygon points="100,50 145,75 145,125 100,150 55,125 55,75" fill="none" stroke="#26364d" stroke-width="1"/>
-        <!-- Ejes -->
         <line x1="100" y1="20" x2="100" y2="180" stroke="#26364d" stroke-width="1"/>
         <line x1="30" y1="60" x2="170" y2="140" stroke="#26364d" stroke-width="1"/>
         <line x1="170" y1="60" x2="30" y2="140" stroke="#26364d" stroke-width="1"/>
-        <!-- Polígono Jugador -->
         <polygon id="hex-poly" points="100,20 170,60 170,140 100,180 30,140 30,60" fill="rgba(106,163,255,0.4)" stroke="#6aa3ff" stroke-width="3"/>
-        <!-- Textos -->
         <text x="100" y="15" fill="#fff" font-size="10" text-anchor="middle" font-weight="bold">ATAQUE</text>
         <text x="180" y="60" fill="#fff" font-size="10" text-anchor="start" font-weight="bold">PASES</text>
         <text x="180" y="145" fill="#fff" font-size="10" text-anchor="start" font-weight="bold">VICTORIAS</text>
@@ -319,6 +334,7 @@ function vista(p, t) {
   }
   if (!(r.matches || r.goals || r.assists || r.wins || r.saves || r.cleanSheets || r.passesTotal || r.recoveries || r.mvp)) return null;
   r.name = String(p && p.name != null ? p.name : "?");
+  r.avatar = p && p.avatar ? p.avatar : r.name.substring(0, 2).toUpperCase();
   r.ga = r.goals + r.assists;
   r.gpm = r.matches ? r.goals / r.matches : 0;
   r.wr = r.matches ? (r.wins / r.matches) * 100 : 0;
@@ -392,6 +408,7 @@ function abrirCarta(pData) {
 
   // Carta FIFA
   $("card-name").textContent = pData.name;
+  $("card-avatar-num").textContent = pData.avatar || pData.name.substring(0, 2).toUpperCase();
   $("card-rat").textContent = c.rat;
   $("card-pos").textContent = c.pos;
   $("card-ata").textContent = c.ata;
