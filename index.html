@@ -155,21 +155,28 @@ function vista(p, t) {
   const mods = modsDe(p);
   let r;
   if (t === "total") {
-    r = { matches: 0, goals: 0, assists: 0, wins: 0, saves: 0, cleanSheets: 0, streak: 0, bestStreak: 0, elo: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0 };
-    for (const m of Object.values(mods)) {
+    r = { matches: 0, goals: 0, assists: 0, wins: 0, saves: 0, cleanSheets: 0, streak: 0, bestStreak: 0, elo: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, matchesPasses: 0, matchesGK: 0 };
+    for (const [mKey, m] of Object.entries(mods)) {
+      const pjMod = num(m.matches);
       for (const k of ["matches", "goals", "assists", "wins", "saves", "cleanSheets", "passesTotal", "passesCompleted", "recoveries", "mvp"]) r[k] += num(m[k]);
       r.streak = Math.max(r.streak, num(m.streak));
       r.bestStreak = Math.max(r.bestStreak, num(m.bestStreak));
+
+      if (mKey !== "1v1") r.matchesPasses += pjMod;
+      if (CON_PORTERO.includes(mKey)) r.matchesGK += pjMod;
     }
   } else {
     const m = mods[t];
     if (!m) return null;
+    const pjMod = num(m.matches);
     r = {
-      matches: num(m.matches), goals: num(m.goals), assists: num(m.assists), wins: num(m.wins),
+      matches: pjMod, goals: num(m.goals), assists: num(m.assists), wins: num(m.wins),
       saves: num(m.saves), cleanSheets: num(m.cleanSheets), streak: num(m.streak), bestStreak: num(m.bestStreak),
       elo: m.elo == null ? 1000 : num(m.elo),
       passesTotal: num(m.passesTotal), passesCompleted: num(m.passesCompleted), recoveries: num(m.recoveries),
-      mvp: num(m.mvp)
+      mvp: num(m.mvp),
+      matchesPasses: t !== "1v1" ? pjMod : 0,
+      matchesGK: CON_PORTERO.includes(t) ? pjMod : 0
     };
   }
   if (!(r.matches || r.goals || r.assists || r.wins || r.saves || r.cleanSheets || r.passesTotal || r.recoveries || r.mvp)) return null;
@@ -225,15 +232,25 @@ function elegirTab(t) {
 }
 
 function abrirCarta(pData) {
-  const pj = pData.matches || 1;
+  const pjTotales = pData.matches || 1;
+  const pjPases = pData.matchesPasses || (tab !== "1v1" ? pjTotales : 0);
+  const pjGK = pData.matchesGK || (CON_PORTERO.includes(tab) ? pjTotales : 0);
 
-  // Fórmulas Ponderadas sobre 100 por partido
-  const ata = Math.min(99, Math.round(((pData.ga / pj) / 1.5) * 100));
-  const def = Math.min(99, Math.round(((pData.recoveries / pj) / 4) * 100));
-  const pas = Math.min(99, Math.round((pData.passPct * 0.6) + (Math.min(1, (pData.passesTotal / pj) / 15) * 40)));
-  const por = pData.saves > 0 ? Math.min(99, Math.round(((pData.saves / pj) / 3) * 70 + ((pData.cleanSheets / pj) * 30))) : 50;
+  // Fórmulas Ponderadas sobre 100 con filtros por modalidad
+  const ata = Math.min(99, Math.round(((pData.ga / pjTotales) / 1.5) * 100));
+  const def = Math.min(99, Math.round(((pData.recoveries / pjTotales) / 4) * 100));
+  
+  // Pases: Ponderado únicamente entre partidos de 2v2 en adelante
+  const volPases = pjPases > 0 ? (pData.passesTotal / pjPases) : 0;
+  const pas = Math.min(99, Math.round((pData.passPct * 0.6) + (Math.min(1, volPases / 15) * 40)));
+
+  // Portero: Ponderado únicamente entre partidos de 5v5 en adelante
+  const por = pjGK > 0 
+    ? Math.min(99, Math.round(((pData.saves / pjGK) / 3) * 70 + ((pData.cleanSheets / pjGK) * 30))) 
+    : 50;
+
   const gan = Math.min(99, Math.round((pData.wr * 0.7) + (Math.min(10, pData.bestStreak) * 3)));
-  const mvp = Math.min(99, Math.round(((pData.mvp / pj) / 0.5) * 100));
+  const mvp = Math.min(99, Math.round(((pData.mvp / pjTotales) / 0.5) * 100));
 
   // Rating General Promedio
   const rat = Math.round((ata + def + pas + gan + mvp) / 5);
