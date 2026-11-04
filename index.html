@@ -270,8 +270,17 @@ const ORDEN = {
 const BASE = ["media", "matches", "goals", "assists", "ga", "gpm", "mvp", "passesTotal", "passPct", "recoveries", "wins", "wr"];
 
 function columnas(t) {
-  if (t === "total") return [...BASE, "bestStreak", "saves", "cleanSheets"];
-  return [...BASE, "streak", "bestStreak", "elo", ...(CON_PORTERO.includes(t) ? ["saves", "cleanSheets"] : [])];
+  if (t === "total") return [...BASE, "bestStreak", "saves", "cleanSheets", "elo"];
+  
+  let cols = [...BASE, "streak", "bestStreak", "elo"];
+  if (t === "1v1") {
+    // Quitar pases totales y porcentaje de pases en 1v1
+    cols = cols.filter(c => c !== "passesTotal" && c !== "passPct");
+  }
+  if (CON_PORTERO.includes(t)) {
+    cols.push("saves", "cleanSheets");
+  }
+  return cols;
 }
 
 let data = [], tab = "total", key = "media", cargando = true, error = "";
@@ -308,7 +317,6 @@ function vista(p, t) {
   const mods = modsDe(p);
   let r;
 
-  // Mapear qué modalidades del JSON entran en cada pestaña
   let targetKeys = [];
   if (t === "total") {
     targetKeys = Object.keys(mods);
@@ -425,7 +433,6 @@ function switchView(view) {
 function abrirCarta(pData) {
   const c = calcularAtributos(pData);
 
-  // Carta FIFA
   $("card-name").textContent = pData.name;
   $("card-avatar-num").textContent = pData.avatar || pData.name.substring(0, 2).toUpperCase();
   $("card-rat").textContent = c.rat;
@@ -438,11 +445,9 @@ function abrirCarta(pData) {
   $("card-mvp").textContent = c.mvp;
   $("card-mod").textContent = nombreTab(tab).toUpperCase();
 
-  // Hexágono PES
   $("hex-name").textContent = pData.name;
   $("hex-stats-summary").textContent = `ATA: ${c.ata} | DEF: ${c.def} | PAS: ${c.pas} | POR: ${c.por}`;
 
-  // Calcular puntos del hexágono (Radio max = 80px)
   const calcPt = (val, angleDeg) => {
     const rad = (angleDeg - 90) * (Math.PI / 180);
     const r = (val / 100) * 80;
