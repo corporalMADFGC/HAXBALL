@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>F7 Ranking Room - Temporada 1</title>
+<title>F7 Ranking Room</title>
 <style>
 :root{--bg:#eef2f6;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#cbd5e1;--blue:#1e5bb8;--gold:#b07800}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429}}
@@ -12,12 +12,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe 
 main{max-width:1280px;margin:0 auto;padding:24px 12px 64px}
 h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem,6vw,3.2rem);line-height:1;margin:0 0 4px;font-weight:700}
 .sub{color:var(--mut);margin:0 0 16px;font-size:.9rem}
-.time-bar, .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
-.time-bar button, .tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
-.time-bar button[aria-selected=true], .tabs button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-.bar button{font:inherit;font-size:.8rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
-.bar button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .bar input{flex:1;min-width:140px;font:inherit;font-size:.85rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
 table{width:100%;border-collapse:collapse;min-width:850px;font-size:.82rem}
@@ -28,34 +26,25 @@ td.pos{color:var(--mut);width:1%;font-weight:600}
 tr.top td.pos{color:var(--gold);font-weight:700}
 td.name{font-weight:600;cursor:pointer;color:var(--blue)}
 td.name:hover{text-decoration:underline}
-td.key{font-weight:700;background:rgba(30,91,184,0.08)}
 .empty{padding:32px;text-align:center;color:var(--mut)}
 
-/* MODAL CARTA */
+/* MODAL CARTA FIFA */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .modal-overlay.active{opacity:1;pointer-events:auto}
-.fut-card-gold{width:290px;height:430px;background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);border-radius:16px;padding:16px;color:#111;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #fbe59d}
-.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold}
+.fut-card-gold{width:290px;height:420px;background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);border-radius:16px;padding:20px;color:#111;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #fbe59d;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold;border:2px solid #fff}
 </style>
 </head>
 <body>
 <main>
   <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
-  <p class="sub" id="sub">Cargando…</p>
-  
-  <!-- Selector de Periodo de Tiempo -->
-  <div class="time-bar" id="time-bar" role="tablist">
-    <button type="button" aria-selected="false" onclick="elegirTiempo('diario')">📅 Diario</button>
-    <button type="button" aria-selected="false" onclick="elegirTiempo('semanal')">📅 Semanal</button>
-    <button type="button" aria-selected="false" onclick="elegirTiempo('mensual')">📅 Mensual</button>
-    <button type="button" aria-selected="true" onclick="elegirTiempo('temp1')">🏆 Temporada 1</button>
-  </div>
+  <p class="sub" id="sub">Cargando datos...</p>
 
   <div class="tabs" id="tabs" role="tablist"></div>
-  <div class="bar"><span id="orden"></span><input id="q" type="search" placeholder="Buscar jugador"></div>
+  <div class="bar"><input id="q" type="search" placeholder="Buscar jugador..." oninput="render()"></div>
   <div class="wrap">
     <table><thead id="head"></thead><tbody id="rows"></tbody></table>
-    <div class="empty" id="empty" hidden></div>
+    <div class="empty" id="empty" hidden>No se encontraron jugadores.</div>
   </div>
 </main>
 
@@ -63,82 +52,23 @@ td.key{font-weight:700;background:rgba(30,91,184,0.08)}
   <div style="position:relative" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
     <div class="fut-card-gold">
-      <h2 id="card-name" style="text-align:center;text-transform:uppercase">JUGADOR</h2>
-      <p style="text-align:center" id="card-info">Estadísticas del periodo</p>
+      <h2 id="card-name" style="text-align:center;text-transform:uppercase;margin:0;font-size:1.6rem">JUGADOR</h2>
+      <div id="card-info" style="font-size:1.1rem;line-height:1.6;font-weight:bold;text-align:center"></div>
     </div>
   </div>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const TABS_LISTA = ["1v1", "2v2", "3v3", "4v4", "5y6v", "7v7", "+7v", "total"];
-const CON_PORTERO = ["5v5", "6v6", "5y6v", "7v7", "full", "+7v"];
+const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full"];
 
-let dbGlobal = { jugadores: {}, partidaHistorial: [] };
-let tiempoFiltro = "temp1"; // diario, semanal, mensual, temp1
-let tab = "total", key = "media", cargando = true;
+let listaJugadoresGlobal = [];
+let tab = "total";
+let cargando = true;
 
-const ETIQUETA = {
-  media: { icon: "MEDIA", name: "Media General" },
-  matches: { icon: "🎮", name: "PJ" },
-  goals: { icon: "⚽", name: "Goles" },
-  assists: { icon: "🅰️", name: "Asistencias" },
-  wins: { icon: "🥇", name: "Victorias" },
-  elo: { icon: "🏆", name: "ELO" }
-};
-
-function elegirTiempo(t) {
-  tiempoFiltro = t;
-  document.querySelectorAll(".time-bar button").forEach(b => b.setAttribute("aria-selected", "false"));
-  event.target.setAttribute("aria-selected", "true");
-  render();
-}
-
-function filtrarHistorialPorTiempo(historial) {
-  if (!historial || historial.length === 0) return [];
-  const ahora = Date.now();
-  return historial.filter(p => {
-    if (tiempoFiltro === "diario") return (ahora - p.timestamp) <= 24 * 60 * 60 * 1000;
-    if (tiempoFiltro === "semanal") return (ahora - p.timestamp) <= 7 * 24 * 60 * 60 * 1000;
-    if (tiempoFiltro === "mensual") return (ahora - p.timestamp) <= 30 * 24 * 60 * 60 * 1000;
-    return true; // temp1 (todo el registro)
-  });
-}
-
-function procesarDatosFiltrados() {
-  if (tiempoFiltro === "temp1") {
-    // Si es Temporada 1, usamos el objeto acumulado directamente
-    return Object.values(dbGlobal.jugadores || {});
-  }
-  
-  // Para diario, semanal o mensual, recalculamos los acumulados a partir del historial de partidas filtrado
-  const filtrados = filtrarHistorialPorTiempo(dbGlobal.partidaHistorial);
-  const mapaJugadores = {};
-
-  filtrados.forEach(partido => {
-    const mod = partido.modalidad;
-    partido.participantes.forEach(p => {
-      const k = p.auth || p.name;
-      if (!mapaJugadores[k]) {
-        mapaJugadores[k] = { name: p.name, avatar: p.name.substring(0, 2).toUpperCase(), modalidades: {} };
-      }
-      if (!mapaJugadores[k].modalidades[mod]) {
-        mapaJugadores[k].modalidades[mod] = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000 };
-      }
-      const m = mapaJugadores[k].modalidades[mod];
-      m.matches++;
-      m.goals += (p.goals || 0);
-      m.assists += (p.assists || 0);
-      if (p.team === p.ganador) { m.wins++; m.elo += 25; }
-    });
-  });
-
-  return Object.values(mapaJugadores);
-}
-
-function vista(p, t) {
+function obtenerVistaJugador(p, modo) {
   const mods = p.modalidades || {};
-  let targetKeys = t === "total" ? Object.keys(mods) : [t];
+  let targetKeys = modo === "total" ? Object.keys(mods) : [modo];
   let r = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000 };
   let totalElo = 0, countElo = 0;
 
@@ -155,7 +85,6 @@ function vista(p, t) {
   r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
   if (!r.matches && !r.goals) return null;
   r.name = p.name;
-  r.media = Math.round(((r.goals + r.assists) / Math.max(1, r.matches)) * 30 + 50);
   return r;
 }
 
@@ -163,8 +92,9 @@ function pintarTabs() {
   const cont = $("tabs"); cont.textContent = "";
   TABS_LISTA.forEach((t) => {
     const b = document.createElement("button");
-    b.type = "button"; b.setAttribute("aria-selected", String(t === tab));
-    b.textContent = t;
+    b.type = "button"; 
+    b.setAttribute("aria-selected", String(t === tab));
+    b.textContent = t.toUpperCase();
     b.addEventListener("click", () => { tab = t; render(); });
     cont.append(b);
   });
@@ -172,8 +102,12 @@ function pintarTabs() {
 
 function render() {
   pintarTabs();
-  const datosJugadores = procesarDatosFiltrados();
-  const list = datosJugadores.map(p => vista(p, tab)).filter(Boolean)
+  const filtroTexto = $("q").value.toLowerCase();
+  
+  let list = listaJugadoresGlobal
+    .map(p => obtenerVistaJugador(p, tab))
+    .filter(Boolean)
+    .filter(p => p.name.toLowerCase().includes(filtroTexto))
     .sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 
   const head = $("head"); head.textContent = "";
@@ -184,26 +118,33 @@ function render() {
   head.append(hr);
 
   const tb = $("rows"); tb.textContent = "";
-  list.forEach((p, i) => {
-    const tr = document.createElement("tr");
-    if (i < 0) tr.className = "top";
-    const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
-    
-    const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
-    nm.addEventListener("click", () => {
-      $("card-name").textContent = p.name;
-      $("card-info").textContent = `ELO: ${p.elo} | Goles: ${p.goals} | Partidos: ${p.matches}`;
-      $("modal").classList.add("active");
-    });
-    tr.append(nm);
+  
+  if (list.length === 0) {
+    $("empty").hidden = false;
+  } else {
+    $("empty").hidden = true;
+    list.forEach((p, i) => {
+      const tr = document.createElement("tr");
+      if (i === 0) tr.className = "top";
 
-    [p.matches, p.goals, p.assists, p.wins, p.elo].forEach(val => {
-      const td = document.createElement("td"); td.textContent = val; tr.append(td);
-    });
-    tb.append(tr);
-  });
+      const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
+      
+      const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
+      nm.addEventListener("click", () => {
+        $("card-name").textContent = p.name;
+        $("card-info").innerHTML = `<br>🏆 ELO: ${p.elo}<br>⚽ Goles: ${p.goals}<br>🎯 Asistencias: ${p.assists}<br>🎮 Partidos: ${p.matches}<br>🥇 Victorias: ${p.wins}`;
+        $("modal").classList.add("active");
+      });
+      tr.append(nm);
 
-  $("sub").textContent = cargando ? "Cargando…" : `Mostrando periodo [${tiempoFiltro.toUpperCase()}] · ${list.length} jugadores activos. Temporada 1 finaliza el 5 de Feb de 2027.`;
+      [p.matches, p.goals, p.assists, p.wins, p.elo].forEach(val => {
+        const td = document.createElement("td"); td.textContent = val; tr.append(td);
+      });
+      tb.append(tr);
+    });
+  }
+
+  $("sub").textContent = cargando ? "Cargando…" : `Modo [${tab.toUpperCase()}] · ${list.length} jugadores registrados.`;
 }
 
 async function load() {
@@ -211,14 +152,22 @@ async function load() {
     const r = await fetch("stats.json?t=" + Date.now());
     if (r.ok) {
       const json = await r.json();
-      dbGlobal = Array.isArray(json) ? { jugadores: {}, partidaHistorial: [] } : json;
+      // Soporta tanto array directo como objeto de jugadores
+      if (Array.isArray(json)) {
+        listaJugadoresGlobal = json;
+      } else if (json && typeof json === "object") {
+        listaJugadoresGlobal = Object.values(json.jugadores || json);
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("Error al cargar stats.json:", e);
+  }
   cargando = false;
   render();
 }
 
-load(); setInterval(load, 30000);
+load(); 
+setInterval(load, 15000);
 </script>
 </body>
 </html>
