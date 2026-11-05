@@ -12,65 +12,32 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe 
 main{max-width:1280px;margin:0 auto;padding:24px 12px 64px}
 h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem,6vw,3.2rem);line-height:1;margin:0 0 4px;font-weight:700}
 .sub{color:var(--mut);margin:0 0 16px;font-size:.9rem}
-
-/* BARRAS DE FILTROS */
-.time-bar, .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;border-bottom:1px solid var(--line)}
-.time-bar button, .tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer;transition:all .15s ease}
+.time-bar, .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.time-bar button, .tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
 .time-bar button[aria-selected=true], .tabs button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
-
-.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center}
-.bar button{font:inherit;font-size:.8rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
-.bar button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .bar input{flex:1;min-width:140px;font:inherit;font-size:.85rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
-
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
-table{width:100%;border-collapse:collapse;min-width:900px;font-size:.82rem}
-th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-weight:700;color:var(--mut);font-size:.85rem;user-select:none}
-th.sortable{cursor:pointer}
-th.sortable:hover{color:var(--blue)}
+table{width:100%;border-collapse:collapse;min-width:950px;font-size:.82rem}
+th,td{padding:8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:700;color:var(--mut);font-size:.85rem}
 th:nth-child(2),td:nth-child(2){text-align:left}
 td.pos{color:var(--mut);width:1%;font-weight:600}
 tr.top td.pos{color:var(--gold);font-weight:700}
 td.name{font-weight:600;cursor:pointer;color:var(--blue)}
 td.name:hover{text-decoration:underline}
-td.key{font-weight:700;background:rgba(30,91,184,0.08)}
 .empty{padding:32px;text-align:center;color:var(--mut)}
 
-/* ESTILOS CARTA FIFA ULTIMATE TEAM & ROMBO PES 6 */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease;backdrop-filter:blur(4px)}
+/* MODAL CARTA FIFA Y PES ROMBO */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .modal-overlay.active{opacity:1;pointer-events:auto}
-
-.fut-card-container{position:relative;perspective:1000px}
-.close-btn{position:absolute;top:-14px;right:-14px;background:#000;color:#fff;border-radius:50%;width:34px;height:34px;cursor:pointer;font-weight:bold;border:2px solid var(--gold);z-index:1010;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.5)}
-
-.fut-card-gold{width:310px;height:470px;background:linear-gradient(135deg, #fceebb 0%, #f8ce63 30%, #c39722 70%, #805c08 100%);border-radius:20px;padding:18px;color:#1a1001;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #ffe89e;box-shadow:0 15px 35px rgba(0,0,0,0.6);text-shadow:0 1px 1px rgba(255,255,255,0.4)}
-.fut-card-gold::before{content:"";position:absolute;top:6px;left:6px;right:6px;bottom:6px;border:1px solid rgba(255,255,255,0.4);border-radius:15px;pointer-events:none}
-
-.card-top{display:flex;justify-content:space-between;align-items:flex-start}
-.rating-block{display:flex;flex-direction:column;align-items:center;line-height:0.9}
-.card-rating{font-size:2.8rem;font-weight:900;font-family:"Barlow Condensed",sans-serif}
-.card-pos{font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:1px}
-
-/* DIBUJO FICHA JUGADOR */
-.player-badge{width:80px;height:80px;background:radial-gradient(circle, #fff 20%, #e6be53 80%);border-radius:50%;border:3px solid #3d2b02;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,0.3);overflow:hidden;position:relative}
-.badge-avatar{font-size:2.2rem;font-weight:900;color:#2a1d02;text-transform:uppercase;font-family:"Barlow Condensed",sans-serif}
-
-.card-name-title{text-align:center;font-size:1.4rem;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin:4px 0 2px;border-bottom:2px solid rgba(61,43,2,0.2);padding-bottom:4px;font-family:"Barlow Condensed",sans-serif}
-
-/* STATS Y ROMBO PES 6 */
-.card-middle{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:4px 0}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:.8rem;font-weight:800}
-.stat-item{display:flex;justify-content:space-between;gap:4px}
-.stat-label{color:#4a3608}
-.stat-val{color:#100b01}
-
-/* CONTENEDOR ROMBO PES 6 */
-.pes-hexagon-box{width:110px;height:110px;position:relative;display:flex;align-items:center;justify-content:center}
-.pes-hexagon-box svg{width:100%;height:100%;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
-
-.card-bottom{display:flex;justify-content:space-around;border-top:2px solid rgba(61,43,2,0.2);padding-top:6px;font-size:.75rem;font-weight:800;text-align:center}
-.bottom-stat span{display:block;font-size:.95rem;font-weight:900}
+.fut-card-gold{width:320px;height:490px;background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);border-radius:18px;padding:16px;color:#111;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #fbe59d;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold;border:2px solid #fff}
+.card-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(0,0,0,0.15);padding-bottom:8px}
+.card-ovr{font-size:2.8rem;font-weight:900;line-height:1;margin:0}
+.card-avatar{width:50px;height:50px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;border:2px solid #fff}
+.pes-hexagon-container{display:flex;justify-content:center;align-items:center;margin:8px 0}
+.card-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;font-weight:bold;background:rgba(255,255,255,0.3);padding:8px;border-radius:8px}
 </style>
 </head>
 <body>
@@ -78,7 +45,6 @@ td.key{font-weight:700;background:rgba(30,91,184,0.08)}
   <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
   <p class="sub" id="sub">Cargando…</p>
   
-  <!-- Selector de Periodo de Tiempo -->
   <div class="time-bar" id="time-bar" role="tablist">
     <button type="button" aria-selected="false" onclick="elegirTiempo('diario')">📅 Diario</button>
     <button type="button" aria-selected="false" onclick="elegirTiempo('semanal')">📅 Semanal</button>
@@ -86,67 +52,33 @@ td.key{font-weight:700;background:rgba(30,91,184,0.08)}
     <button type="button" aria-selected="true" onclick="elegirTiempo('temp1')">🏆 Temporada 1</button>
   </div>
 
-  <!-- Selector de Modalidad -->
   <div class="tabs" id="tabs" role="tablist"></div>
-
-  <!-- Barra de Ordenación y Búsqueda -->
-  <div class="bar">
-    <span id="orden-btns"></span>
-    <input id="q" type="search" placeholder="Buscar jugador..." oninput="render()">
-  </div>
-
+  <div class="bar"><input id="q" type="search" placeholder="Buscar jugador..." oninput="render()"></div>
   <div class="wrap">
     <table><thead id="head"></thead><tbody id="rows"></tbody></table>
-    <div class="empty" id="empty" hidden>No hay registros para este filtro.</div>
+    <div class="empty" id="empty" hidden>No se encontraron jugadores en este periodo.</div>
   </div>
 </main>
 
-<!-- MODAL CARTA FIFA ULTIMATE TEAM + ROMBO PES 6 -->
 <div class="modal-overlay" id="modal" onclick="$('modal').classList.remove('active')">
-  <div class="fut-card-container" onclick="event.stopPropagation()">
+  <div style="position:relative" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
     <div class="fut-card-gold">
-      <div class="card-top">
-        <div class="rating-block">
-          <div class="card-rating" id="card-media">85</div>
-          <div class="card-pos" id="card-pos">MED</div>
+      <div class="card-header">
+        <div>
+          <div class="card-ovr" id="card-ovr">--</div>
+          <div style="font-size:0.75rem;font-weight:bold;text-transform:uppercase">MEDIA OVR</div>
         </div>
-        <!-- Ficha/Avatar de jugador -->
-        <div class="player-badge">
-          <div class="badge-avatar" id="card-avatar">HA</div>
-        </div>
+        <h2 id="card-name" style="margin:0;font-size:1.4rem;text-transform:uppercase;text-align:right">JUGADOR</h2>
+        <div class="card-avatar" id="card-avatar">--</div>
       </div>
 
-      <div class="card-name-title" id="card-name">JUGADOR</div>
-
-      <div class="card-middle">
-        <div class="stats-grid">
-          <div class="stat-item"><span class="stat-label">PAC</span><span class="stat-val" id="st-pac">80</span></div>
-          <div class="stat-item"><span class="stat-label">SHO</span><span class="stat-val" id="st-sho">85</span></div>
-          <div class="stat-item"><span class="stat-label">PAS</span><span class="stat-val" id="st-pas">78</span></div>
-          <div class="stat-item"><span class="stat-label">DRI</span><span class="stat-val" id="st-dri">82</span></div>
-          <div class="stat-item"><span class="stat-label">DEF</span><span class="stat-val" id="st-def">65</span></div>
-          <div class="stat-item"><span class="stat-label">PHY</span><span class="stat-val" id="st-phy">75</span></div>
-        </div>
-
-        <!-- ROMBO/HEXÁGONO DE HABILIDADES TIPO PES 6 -->
-        <div class="pes-hexagon-box">
-          <svg viewBox="0 0 100 100">
-            <!-- Red base del hexágono -->
-            <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" fill="rgba(0,0,0,0.1)" stroke="#3d2b02" stroke-width="1.5"/>
-            <polygon points="50,25 72.5,38 72.5,62 50,75 27.5,62 27.5,38" fill="none" stroke="rgba(61,43,2,0.3)" stroke-width="1" stroke-dasharray="2,2"/>
-            <!-- Polígono de habilidades del jugador (Dinámico) -->
-            <polygon id="pes-poly" points="50,20 75,35 70,65 50,80 25,65 30,35" fill="rgba(30, 91, 184, 0.55)" stroke="#0f3c80" stroke-width="2"/>
-          </svg>
-        </div>
+      <!-- Hexágono estilo PES 6 -->
+      <div class="pes-hexagon-container">
+        <svg width="170" height="150" viewBox="0 0 200 180" id="pes-svg"></svg>
       </div>
 
-      <div class="card-bottom">
-        <div class="bottom-stat">ELO<span id="card-elo">1200</span></div>
-        <div class="bottom-stat">PARTIDOS<span id="card-pj">45</span></div>
-        <div class="bottom-stat">VICTORIAS<span id="card-vic">28</span></div>
-        <div class="bottom-stat">RACHA<span id="card-racha">🔥3</span></div>
-      </div>
+      <div class="card-stats-grid" id="card-info"></div>
     </div>
   </div>
 </div>
@@ -156,19 +88,9 @@ const $ = (id) => document.getElementById(id);
 const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full"];
 
 let dbGlobal = { jugadores: {}, partidaHistorial: [] };
-let tiempoFiltro = "temp1"; 
+let tiempoFiltro = "temp1";
 let tab = "total";
-let keyOrden = "media";
 let cargando = true;
-
-const ETIQUETAS_ORDEN = {
-  media: "MEDIA",
-  goals: "GOLES",
-  assists: "ASIST.",
-  wins: "VIC.",
-  elo: "ELO",
-  matches: "PJ"
-};
 
 function elegirTiempo(t) {
   tiempoFiltro = t;
@@ -177,37 +99,33 @@ function elegirTiempo(t) {
   render();
 }
 
-function filtrarHistorialPorTiempo(historial) {
-  if (!historial || historial.length === 0) return [];
-  const ahora = Date.now();
-  return historial.filter(p => {
-    if (tiempoFiltro === "diario") return (ahora - p.timestamp) <= 24 * 60 * 60 * 1000;
-    if (tiempoFiltro === "semanal") return (ahora - p.timestamp) <= 7 * 24 * 60 * 60 * 1000;
-    if (tiempoFiltro === "mensual") return (ahora - p.timestamp) <= 30 * 24 * 60 * 60 * 1000;
-    return true; // temp1
-  });
-}
-
 function procesarDatosFiltrados() {
-  const jugDict = dbGlobal.jugadores || {};
-  if (tiempoFiltro === "temp1" || !dbGlobal.partidaHistorial || dbGlobal.partidaHistorial.length === 0) {
-    return Object.values(jugDict);
+  const jugOriginales = dbGlobal.jugadores || {};
+  const historial = dbGlobal.partidaHistorial || [];
+
+  if (tiempoFiltro === "temp1" || historial.length === 0) {
+    return Object.values(jugOriginales);
   }
 
-  const filtrados = filtrarHistorialPorTiempo(dbGlobal.partidaHistorial);
-  const mapa = {};
+  const ahora = Date.now();
+  const msLimite = tiempoFiltro === "diario" ? 24 * 60 * 60 * 1000 :
+                   tiempoFiltro === "semanal" ? 7 * 24 * 60 * 60 * 1000 :
+                   30 * 24 * 60 * 60 * 1000;
+
+  const filtrados = historial.filter(p => (ahora - p.timestamp) <= msLimite);
+  const mapaJugadores = {};
 
   filtrados.forEach(partido => {
     const mod = partido.modalidad;
     (partido.participantes || []).forEach(p => {
       const k = p.auth || p.name;
-      if (!mapa[k]) {
-        mapa[k] = { name: p.name, avatar: p.name.substring(0, 2).toUpperCase(), modalidades: {} };
+      if (!mapaJugadores[k]) {
+        mapaJugadores[k] = { name: p.name, avatar: p.name.substring(0, 2).toUpperCase(), modalidades: {} };
       }
-      if (!mapa[k].modalidades[mod]) {
-        mapa[k].modalidades[mod] = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, streak: 0, bestStreak: 0 };
+      if (!mapaJugadores[k].modalidades[mod]) {
+        mapaJugadores[k].modalidades[mod] = { matches: 0, wins: 0, goals: 0, assists: 0, elo: 1000, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0 };
       }
-      const m = mapa[k].modalidades[mod];
+      const m = mapaJugadores[k].modalidades[mod];
       m.matches++;
       m.goals += (p.goals || 0);
       m.assists += (p.assists || 0);
@@ -215,44 +133,115 @@ function procesarDatosFiltrados() {
     });
   });
 
-  return Object.values(mapa);
+  return Object.values(mapaJugadores);
 }
 
-function vista(p, t) {
+function calcularAtributosPES(r) {
+  const pj = Math.max(1, r.matches);
+  
+  // 1. ATAQUE (ATT)
+  const att = Math.min(99, Math.round(40 + ((r.goals * 1.5 + r.assists) / pj) * 25));
+
+  // 2. DEFENSA (DEF) - Incluye Recuperaciones, Paradas y Porterías a cero
+  const def = Math.min(99, Math.round(40 + ((r.recoveries + r.saves * 1.2 + r.cleanSheets * 3) / pj) * 20));
+
+  // 3. TÉCNICA (TEC) - Pases y asistencias
+  const passPct = r.passesTotal > 0 ? (r.passesCompleted / r.passesTotal) : 0.5;
+  const tec = Math.min(99, Math.round(passPct * 60 + (r.assists / pj) * 25));
+
+  // 4. MVP / IMPACTO - Rachas + MVPs (Sustituye a Pace)
+  const mvpAttr = Math.min(99, Math.round(40 + (r.mvp / pj) * 50 + (r.bestStreak || 0) * 3));
+
+  // 5. EXPERIENCIA / RESISTENCIA (EXP)
+  const exp = Math.min(99, Math.round(40 + (Math.log(pj + 1) / Math.log(1.05))));
+
+  // 6. MENTALIDAD / ELO (MEN)
+  const men = Math.min(99, Math.max(40, Math.round(40 + (r.elo - 800) / 10)));
+
+  // MEDIA GLOBAL (OVR) EQUILIBRADA
+  const eloContrib = Math.max(40, 50 + (r.elo - 1000) / 15);
+  const winRateContrib = ((r.wins / pj) * 30) + 50;
+  const outputContrib = Math.min(99, 40 + ((r.goals + r.assists) / pj) * 25);
+  
+  const ovr = Math.min(99, Math.round((eloContrib * 0.4) + (winRateContrib * 0.3) + (outputContrib * 0.3)));
+
+  return { att, def, tec, mvpAttr, exp, men, ovr };
+}
+
+function generarSVGRomboPES(stats) {
+  // Centro y radio del hexágono
+  const cx = 100, cy = 90, r = 65;
+  const labels = ["ATT", "DEF", "TEC", "MVP", "EXP", "MEN"];
+  const vals = [stats.att, stats.def, stats.tec, stats.mvpAttr, stats.exp, stats.men];
+  
+  let gridLines = "";
+  for (let level = 0.25; level <= 1; level += 0.25) {
+    let pts = [];
+    for (let i = 0; i < 6; i++) {
+      let angle = (Math.PI / 3) * i - Math.PI / 2;
+      pts.push(`${cx + r * level * Math.cos(angle)},${cy + r * level * Math.sin(angle)}`);
+    }
+    gridLines += `<polygon points="${pts.join(" ")}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>`;
+  }
+
+  let polyPts = [];
+  let labelTags = "";
+  for (let i = 0; i < 6; i++) {
+    let angle = (Math.PI / 3) * i - Math.PI / 2;
+    let factor = Math.max(0.2, vals[i] / 100);
+    let px = cx + r * factor * Math.cos(angle);
+    let py = cy + r * factor * Math.sin(angle);
+    polyPts.push(`${px},${py}`);
+
+    let lx = cx + (r + 18) * Math.cos(angle);
+    let ly = cy + (r + 18) * Math.sin(angle);
+    labelTags += `<text x="${lx}" y="${ly + 4}" font-size="10" font-weight="bold" text-anchor="middle" fill="#111">${labels[i]} ${vals[i]}</text>`;
+  }
+
+  return `
+    ${gridLines}
+    <polygon points="${polyPts.join(" ")}" fill="rgba(30,91,184,0.5)" stroke="#1e5bb8" stroke-width="2"/>
+    ${labelTags}
+  `;
+}
+
+function obtenerVistaJugador(p, modo) {
   const mods = p.modalidades || {};
-  let targetKeys = t === "total" ? Object.keys(mods) : [t];
-  let r = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000, saves: 0, passesTotal: 0, passesCompleted: 0, streak: 0, bestStreak: 0 };
-  let totalElo = 0, countElo = 0;
+  let targetKeys = modo === "total" ? Object.keys(mods) : [modo];
+  let r = { 
+    matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, 
+    saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, 
+    recoveries: 0, mvp: 0, streak: 0, bestStreak: 0, elo: 1000 
+  };
+  let totalElo = 0, countElo = 0, maxStreak = 0;
 
   targetKeys.forEach(mKey => {
     const m = mods[mKey];
     if (!m) return;
     r.matches += (m.matches || 0);
+    r.wins += (m.wins || 0);
     r.goals += (m.goals || 0);
     r.assists += (m.assists || 0);
-    r.wins += (m.wins || 0);
+    r.ownGoals += (m.ownGoals || 0);
     r.saves += (m.saves || 0);
+    r.cleanSheets += (m.cleanSheets || 0);
     r.passesTotal += (m.passesTotal || 0);
     r.passesCompleted += (m.passesCompleted || 0);
-    if ((m.bestStreak || 0) > r.bestStreak) r.bestStreak = m.bestStreak;
+    r.recoveries += (m.recoveries || 0);
+    r.mvp += (m.mvp || 0);
+    if ((m.bestStreak || 0) > maxStreak) maxStreak = m.bestStreak;
     if (m.elo != null) { totalElo += m.elo; countElo++; }
   });
 
   r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
+  r.bestStreak = maxStreak;
   if (!r.matches && !r.goals && !r.wins) return null;
-
   r.name = p.name;
   r.avatar = p.avatar || p.name.substring(0, 2).toUpperCase();
-  r.media = Math.min(99, Math.max(50, Math.round(((r.goals + r.assists) / Math.max(1, r.matches)) * 30 + 55)));
-
-  // Habilidades calculadas para el Rombo PES 6 (Escala 0-100)
-  r.pac = Math.min(99, Math.max(40, 60 + (r.wins / Math.max(1, r.matches)) * 35));
-  r.sho = Math.min(99, Math.max(40, 50 + (r.goals / Math.max(1, r.matches)) * 40));
-  r.pas = Math.min(99, Math.max(40, 50 + (r.assists / Math.max(1, r.matches)) * 40));
-  r.dri = Math.min(99, Math.max(40, 55 + (r.goals + r.assists) / Math.max(1, r.matches) * 20));
-  r.def = Math.min(99, Math.max(40, 45 + (r.saves / Math.max(1, r.matches)) * 30));
-  r.phy = Math.min(99, Math.max(40, 50 + (r.matches * 1.5)));
-
+  
+  const calc = calcularAtributosPES(r);
+  r.pes = calc;
+  r.ovr = calc.ovr;
   return r;
 }
 
@@ -260,82 +249,34 @@ function pintarTabs() {
   const cont = $("tabs"); cont.textContent = "";
   TABS_LISTA.forEach((t) => {
     const b = document.createElement("button");
-    b.type = "button"; b.setAttribute("aria-selected", String(t === tab));
+    b.type = "button"; 
+    b.setAttribute("aria-selected", String(t === tab));
     b.textContent = t.toUpperCase();
     b.addEventListener("click", () => { tab = t; render(); });
     cont.append(b);
   });
-
-  const bCont = $("orden-btns"); bCont.textContent = "";
-  Object.keys(ETIQUETAS_ORDEN).forEach(k => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.setAttribute("aria-pressed", String(keyOrden === k));
-    btn.textContent = ETIQUETAS_ORDEN[k];
-    btn.addEventListener("click", () => { keyOrden = k; render(); });
-    bCont.append(btn);
-  });
-}
-
-// CÁLCULO DEL POLÍGONO DE ROMBO PES 6 EN SVG
-function calcularPuntosHexagono(stats) {
-  const centroX = 50, centroY = 50, radioMax = 40;
-  const vals = [stats.pac, stats.sho, stats.dri, stats.phy, stats.def, stats.pas];
-  const angulos = [-90, -30, 30, 90, 150, 210]; // 6 vértices
-
-  const pts = vals.map((val, i) => {
-    const r = (val / 100) * radioMax;
-    const rad = (angulos[i] * Math.PI) / 180;
-    const x = centroX + r * Math.cos(rad);
-    const y = centroY + r * Math.sin(rad);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-
-  return pts.join(" ");
-}
-
-function abrirCartaFIFA(p) {
-  $("card-name").textContent = p.name;
-  $("card-avatar").textContent = p.avatar;
-  $("card-media").textContent = p.media;
-  $("card-pos").textContent = p.sho > p.def ? "DEL" : (p.def > p.pas ? "DEF" : "MED");
-  
-  $("st-pac").textContent = Math.round(p.pac);
-  $("st-sho").textContent = Math.round(p.sho);
-  $("st-pas").textContent = Math.round(p.pas);
-  $("st-dri").textContent = Math.round(p.dri);
-  $("st-def").textContent = Math.round(p.def);
-  $("st-phy").textContent = Math.round(p.phy);
-
-  $("card-elo").textContent = p.elo;
-  $("card-pj").textContent = p.matches;
-  $("card-vic").textContent = p.wins;
-  $("card-racha").textContent = "🔥 " + p.bestStreak;
-
-  // Actualizar Rombo PES 6
-  $("pes-poly").setAttribute("points", calcularPuntosHexagono(p));
-
-  $("modal").classList.add("active");
 }
 
 function render() {
   pintarTabs();
-  const filtro = $("q").value.toLowerCase();
-  const datos = procesarDatosFiltrados();
-
-  let list = datos.map(p => vista(p, tab)).filter(Boolean)
-    .filter(p => p.name.toLowerCase().includes(filtro))
-    .sort((a, b) => (b[keyOrden] || 0) - (a[keyOrden] || 0));
+  const filtroTexto = $("q").value.toLowerCase();
+  const datosJugadores = procesarDatosFiltrados();
+  
+  let list = datosJugadores
+    .map(p => obtenerVistaJugador(p, tab))
+    .filter(Boolean)
+    .filter(p => p.name.toLowerCase().includes(filtroTexto))
+    .sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 
   const head = $("head"); head.textContent = "";
   const hr = document.createElement("tr");
-  ["#", "Jugador", "MEDIA", "PJ", "Goles", "Asist.", "Victorias", "ELO"].forEach(text => {
+  ["#", "Jugador", "OVR", "PJ", "V", "Goles", "Asist.", "Paradas", "Pases (%)", "MVP", "ELO"].forEach(text => {
     const th = document.createElement("th"); th.textContent = text; hr.append(th);
   });
   head.append(hr);
 
   const tb = $("rows"); tb.textContent = "";
-
+  
   if (list.length === 0) {
     $("empty").hidden = false;
   } else {
@@ -347,20 +288,36 @@ function render() {
       const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
       
       const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
-      nm.addEventListener("click", () => abrirCartaFIFA(p));
+      nm.addEventListener("click", () => {
+        const passPct = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) : 0;
+        $("card-name").textContent = p.name;
+        $("card-ovr").textContent = p.ovr;
+        $("card-avatar").textContent = p.avatar;
+        $("pes-svg").innerHTML = generarSVGRomboPES(p.pes);
+        $("card-info").innerHTML = `
+          <div>🏆 ELO: ${p.elo}</div>
+          <div>🎮 PJ: ${p.matches} | 🥇 V: ${p.wins}</div>
+          <div>⚽ Goles: ${p.goals}</div>
+          <div>🅰️ Asistencias: ${p.assists}</div>
+          <div>🧤 Paradas: ${p.saves}</div>
+          <div>🔒 Porterías 0: ${p.cleanSheets}</div>
+          <div>👟 Pases: ${passPct}%</div>
+          <div>⭐ MVPs: ${p.mvp}</div>
+        `;
+        $("modal").classList.add("active");
+      });
       tr.append(nm);
 
-      [p.media, p.matches, p.goals, p.assists, p.wins, p.elo].forEach((val, idx) => {
-        const td = document.createElement("td");
-        td.textContent = val;
-        if ((idx === 0 && keyOrden === "media") || (idx === 5 && keyOrden === "elo")) td.className = "key";
-        tr.append(td);
+      const passPctVal = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) + "%" : "-";
+
+      [p.ovr, p.matches, p.wins, p.goals, p.assists, p.saves, passPctVal, p.mvp, p.elo].forEach(val => {
+        const td = document.createElement("td"); td.textContent = val; tr.append(td);
       });
       tb.append(tr);
     });
   }
 
-  $("sub").textContent = cargando ? "Cargando…" : `Periodo [${tiempoFiltro.toUpperCase()}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores activos. Temporada 1 finaliza el 5 de Feb de 2027.`;
+  $("sub").textContent = cargando ? "Cargando…" : `Periodo [${tiempoFiltro.toUpperCase()}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores registrados.`;
 }
 
 async function load() {
@@ -376,13 +333,15 @@ async function load() {
         dbGlobal.partidaHistorial = json.partidaHistorial || [];
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("Error al cargar stats.json:", e);
+  }
   cargando = false;
   render();
 }
 
 load(); 
-setInterval(load, 20000);
+setInterval(load, 15000);
 </script>
 </body>
 </html>
