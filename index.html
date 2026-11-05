@@ -18,7 +18,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem
 .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .bar input{flex:1;min-width:140px;font:inherit;font-size:.85rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
-table{width:100%;border-collapse:collapse;min-width:850px;font-size:.82rem}
+table{width:100%;border-collapse:collapse;min-width:950px;font-size:.82rem}
 th,td{padding:8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-weight:700;color:var(--mut);font-size:.85rem}
 th:nth-child(2),td:nth-child(2){text-align:left}
@@ -31,7 +31,7 @@ td.name:hover{text-decoration:underline}
 /* MODAL CARTA FIFA */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .modal-overlay.active{opacity:1;pointer-events:auto}
-.fut-card-gold{width:290px;height:420px;background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);border-radius:16px;padding:20px;color:#111;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #fbe59d;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+.fut-card-gold{width:300px;height:450px;background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);border-radius:16px;padding:20px;color:#111;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #fbe59d;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
 .close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold;border:2px solid #fff}
 </style>
 </head>
@@ -52,8 +52,8 @@ td.name:hover{text-decoration:underline}
   <div style="position:relative" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
     <div class="fut-card-gold">
-      <h2 id="card-name" style="text-align:center;text-transform:uppercase;margin:0;font-size:1.6rem">JUGADOR</h2>
-      <div id="card-info" style="font-size:1.1rem;line-height:1.6;font-weight:bold;text-align:center"></div>
+      <h2 id="card-name" style="text-align:center;text-transform:uppercase;margin:0;font-size:1.5rem">JUGADOR</h2>
+      <div id="card-info" style="font-size:0.9rem;line-height:1.5;font-weight:bold"></div>
     </div>
   </div>
 </div>
@@ -69,21 +69,34 @@ let cargando = true;
 function obtenerVistaJugador(p, modo) {
   const mods = p.modalidades || {};
   let targetKeys = modo === "total" ? Object.keys(mods) : [modo];
-  let r = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000 };
-  let totalElo = 0, countElo = 0;
+  let r = { 
+    matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, 
+    saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, 
+    recoveries: 0, mvp: 0, streak: 0, bestStreak: 0, elo: 1000 
+  };
+  let totalElo = 0, countElo = 0, maxStreak = 0;
 
   targetKeys.forEach(mKey => {
     const m = mods[mKey];
     if (!m) return;
     r.matches += (m.matches || 0);
+    r.wins += (m.wins || 0);
     r.goals += (m.goals || 0);
     r.assists += (m.assists || 0);
-    r.wins += (m.wins || 0);
+    r.ownGoals += (m.ownGoals || 0);
+    r.saves += (m.saves || 0);
+    r.cleanSheets += (m.cleanSheets || 0);
+    r.passesTotal += (m.passesTotal || 0);
+    r.passesCompleted += (m.passesCompleted || 0);
+    r.recoveries += (m.recoveries || 0);
+    r.mvp += (m.mvp || 0);
+    if ((m.bestStreak || 0) > maxStreak) maxStreak = m.bestStreak;
     if (m.elo != null) { totalElo += m.elo; countElo++; }
   });
 
   r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
-  if (!r.matches && !r.goals) return null;
+  r.bestStreak = maxStreak;
+  if (!r.matches && !r.goals && !r.wins) return null;
   r.name = p.name;
   return r;
 }
@@ -112,7 +125,7 @@ function render() {
 
   const head = $("head"); head.textContent = "";
   const hr = document.createElement("tr");
-  ["#", "Jugador", "PJ", "Goles", "Asist.", "Victorias", "ELO"].forEach(text => {
+  ["#", "Jugador", "PJ", "V", "Goles", "Asist.", "Paradas", "Pases (%)", "MVP", "ELO"].forEach(text => {
     const th = document.createElement("th"); th.textContent = text; hr.append(th);
   });
   head.append(hr);
@@ -131,13 +144,26 @@ function render() {
       
       const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
       nm.addEventListener("click", () => {
+        const passPct = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) : 0;
         $("card-name").textContent = p.name;
-        $("card-info").innerHTML = `<br>🏆 ELO: ${p.elo}<br>⚽ Goles: ${p.goals}<br>🎯 Asistencias: ${p.assists}<br>🎮 Partidos: ${p.matches}<br>🥇 Victorias: ${p.wins}`;
+        $("card-info").innerHTML = `
+          🏆 ELO: ${p.elo}<br>
+          🎮 Partidos: ${p.matches} | 🥇 Victorias: ${p.wins}<br>
+          🔥 Mejor Racha: ${p.bestStreak}<br>
+          ⚽ Goles: ${p.goals} | 🅰️ Asist.: ${p.assists}<br>
+          🚫 En propia: ${p.ownGoals}<br>
+          🧤 Paradas: ${p.saves} | 🔒 Porterías a 0: ${p.cleanSheets}<br>
+          👟 Pases: ${p.passesTotal} (${passPct}%)<br>
+          🛡️ Recuperaciones: ${p.recoveries}<br>
+          ⭐ MVPs: ${p.mvp}
+        `;
         $("modal").classList.add("active");
       });
       tr.append(nm);
 
-      [p.matches, p.goals, p.assists, p.wins, p.elo].forEach(val => {
+      const passPctVal = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) + "%" : "-";
+
+      [p.matches, p.wins, p.goals, p.assists, p.saves, passPctVal, p.mvp, p.elo].forEach(val => {
         const td = document.createElement("td"); td.textContent = val; tr.append(td);
       });
       tb.append(tr);
@@ -152,7 +178,6 @@ async function load() {
     const r = await fetch("stats.json?t=" + Date.now());
     if (r.ok) {
       const json = await r.json();
-      // Soporta tanto array directo como objeto de jugadores
       if (Array.isArray(json)) {
         listaJugadoresGlobal = json;
       } else if (json && typeof json === "object") {
