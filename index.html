@@ -3,578 +3,221 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>F7 Ranking Room</title>
+<title>F7 Ranking Room - Temporada 1</title>
 <style>
 :root{--bg:#eef2f6;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#cbd5e1;--blue:#1e5bb8;--gold:#b07800}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe UI",system-ui,sans-serif}
 main{max-width:1280px;margin:0 auto;padding:24px 12px 64px}
-h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem,6vw,3.2rem);line-height:1;margin:0 0 4px;font-weight:700;letter-spacing:.01em}
+h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem,6vw,3.2rem);line-height:1;margin:0 0 4px;font-weight:700}
 .sub{color:var(--mut);margin:0 0 16px;font-size:.9rem}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
-.tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
-.tabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.time-bar, .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.time-bar button, .tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
+.time-bar button[aria-selected=true], .tabs button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-.bar button{font:inherit;font-size:.8rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.bar button{font:inherit;font-size:.8rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
 .bar button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .bar input{flex:1;min-width:140px;font:inherit;font-size:.85rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
-#orden{display:contents}
-:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
 table{width:100%;border-collapse:collapse;min-width:850px;font-size:.82rem}
-th,td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-weight:700;color:var(--mut);font-size:.85rem;user-select:none}
-th abbr{text-decoration:none;border-bottom:1px dotted var(--mut);cursor:help}
-th:nth-child(2),td:nth-child(2){text-align:left;width:auto}
-tr:last-child td{border-bottom:0}
-td.pos{color:var(--mut);width:1%;font-variant-numeric:tabular-nums;font-weight:600}
+th,td{padding:8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:700;color:var(--mut);font-size:.85rem}
+th:nth-child(2),td:nth-child(2){text-align:left}
+td.pos{color:var(--mut);width:1%;font-weight:600}
 tr.top td.pos{color:var(--gold);font-weight:700}
-td{font-variant-numeric:tabular-nums}
-td.name{font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--blue)}
+td.name{font-weight:600;cursor:pointer;color:var(--blue)}
 td.name:hover{text-decoration:underline}
-td.name i{display:block;height:3px;margin-top:4px;background:var(--blue);border-radius:2px;opacity:.7}
 td.key{font-weight:700;background:rgba(30,91,184,0.08)}
-td.media-col{font-weight:800;font-size:0.9rem;color:var(--ink)}
-@media(prefers-color-scheme:dark){td.key{background:rgba(106,163,255,0.12)}}
 .empty{padding:32px;text-align:center;color:var(--mut)}
 
-/* MODAL Y CARTA FIFA CON AVATAR HAXBALL */
+/* MODAL CARTA */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease}
 .modal-overlay.active{opacity:1;pointer-events:auto}
-.card-switcher{display:flex;gap:10px;margin-bottom:12px}
-.card-switcher button{background:#fff;color:#000;border:none;padding:6px 16px;font-weight:700;border-radius:20px;cursor:pointer;font-size:0.85rem}
-.card-switcher button.active{background:var(--blue);color:#fff}
-
-.fut-card-gold{
-  width:290px;
-  height:430px;
-  background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);
-  border-radius:16px 16px 100px 100px;
-  padding:16px;
-  color:#111;
-  box-shadow:0 15px 35px rgba(0,0,0,0.7), inset 0 0 10px rgba(255,255,255,0.5);
-  border:3px solid #fbe59d;
-  position:relative;
-  font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  transform:scale(0.95);
-  transition:transform .2s ease;
-}
-.modal-overlay.active .fut-card-gold{transform:scale(1)}
-
-.fut-top{position:relative;height:210px;display:flex;justify-content:space-between;align-items:flex-start}
-.fut-rating-pos{position:absolute;top:10px;left:10px;text-align:center;line-height:0.9;z-index:2}
-.fut-rating{font-size:3.5rem;font-weight:900;letter-spacing:-1px}
-.fut-pos{font-size:1.4rem;font-weight:800;text-transform:uppercase;margin-top:2px}
-
-/* CÍRCULO / AVATAR ESTILO HAXBALL */
-.haxball-avatar-box{
-  position:absolute;
-  right:15px;
-  bottom:5px;
-  width:145px;
-  height:145px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.haxball-circle{
-  width:125px;
-  height:125px;
-  border-radius:50%;
-  background:radial-gradient(circle, #2b70c9 0%, #17427d 100%);
-  border:6px solid #555555;
-  box-shadow:0 8px 18px rgba(0,0,0,0.5), inset 0 0 8px rgba(255,255,255,0.3);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:2.8rem;
-  font-weight:900;
-  text-shadow:2px 2px 4px rgba(0,0,0,0.8);
-  user-select:none;
-}
-
-.fut-mid{text-align:center;margin-top:10px}
-.fut-name{
-  font-size:1.7rem;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:1px;
-  border-top:2px solid rgba(0,0,0,0.15);
-  border-bottom:2px solid rgba(0,0,0,0.15);
-  padding:4px 0;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.fut-stats-row{
-  display:grid;
-  grid-template-columns:repeat(6, 1fr);
-  gap:2px;
-  text-align:center;
-  margin-top:8px;
-  padding:0 4px;
-}
-.fut-stat-col{display:flex;flex-direction:column;align-items:center}
-.fut-stat-lbl{font-size:0.75rem;font-weight:800;color:#333;text-transform:uppercase}
-.fut-stat-num{font-size:1.3rem;font-weight:900}
-
-.fut-bottom{display:flex;justify-content:center;gap:12px;align-items:center;margin-top:8px;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1)}
-.fut-flag{font-size:1.4rem}
-
-/* VISTA HEXÁGONO PRO 6 */
-.hex-container{
-  width:290px;
-  height:430px;
-  background:#142033;
-  border-radius:18px;
-  padding:16px;
-  color:#fff;
-  border:2px solid #26364d;
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  justify-content:space-between;
-}
-.hex-container.active{display:flex}
-.hex-title{font-size:1.3rem;font-weight:800;text-transform:uppercase;color:var(--gold)}
-.hex-svg{width:220px;height:220px}
-
-.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border:2px solid #fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold;font-size:1.1rem;display:flex;align-items:center;justify-content:center;z-index:10}
+.fut-card-gold{width:290px;height:430px;background:radial-gradient(circle, #f9e29c 0%, #d4a743 60%, #a67c1e 100%);border-radius:16px;padding:16px;color:#111;position:relative;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #fbe59d}
+.close-btn{position:absolute;top:-12px;right:-12px;background:#000;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:bold}
 </style>
 </head>
 <body>
 <main>
   <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
   <p class="sub" id="sub">Cargando…</p>
-  <div class="tabs" id="tabs" role="tablist" aria-label="Modalidad"></div>
-  <div class="bar"><span id="orden"></span><input id="q" type="search" placeholder="Buscar jugador" aria-label="Buscar jugador"></div>
+  
+  <!-- Selector de Periodo de Tiempo -->
+  <div class="time-bar" id="time-bar" role="tablist">
+    <button type="button" aria-selected="false" onclick="elegirTiempo('diario')">📅 Diario</button>
+    <button type="button" aria-selected="false" onclick="elegirTiempo('semanal')">📅 Semanal</button>
+    <button type="button" aria-selected="false" onclick="elegirTiempo('mensual')">📅 Mensual</button>
+    <button type="button" aria-selected="true" onclick="elegirTiempo('temp1')">🏆 Temporada 1</button>
+  </div>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="bar"><span id="orden"></span><input id="q" type="search" placeholder="Buscar jugador"></div>
   <div class="wrap">
     <table><thead id="head"></thead><tbody id="rows"></tbody></table>
     <div class="empty" id="empty" hidden></div>
   </div>
 </main>
 
-<!-- MODAL CARTA FIFA Y PRO 6 -->
-<div class="modal-overlay" id="modal" onclick="cerrarCarta(event)">
-  <div style="position:relative">
-    <button class="close-btn" onclick="cerrarCartaDirecto()">✕</button>
-
-    <div class="card-switcher">
-      <button id="btn-view-fifa" class="active" onclick="switchView('fifa')">CARTA FIFA</button>
-      <button id="btn-view-pes" onclick="switchView('pes')">HEXÁGONO PRO 6</button>
+<div class="modal-overlay" id="modal" onclick="$('modal').classList.remove('active')">
+  <div style="position:relative" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
+    <div class="fut-card-gold">
+      <h2 id="card-name" style="text-align:center;text-transform:uppercase">JUGADOR</h2>
+      <p style="text-align:center" id="card-info">Estadísticas del periodo</p>
     </div>
-
-    <!-- CARTA FIFA -->
-    <div class="fut-card-gold" id="view-fifa" onclick="event.stopPropagation()">
-      <div class="fut-top">
-        <div class="fut-rating-pos">
-          <div class="fut-rating" id="card-rat">99</div>
-          <div class="fut-pos" id="card-pos">DC</div>
-        </div>
-        
-        <!-- AVATAR HAXBALL REAL -->
-        <div class="haxball-avatar-box">
-          <div class="haxball-circle" id="card-avatar-num">7</div>
-        </div>
-      </div>
-      <div class="fut-mid">
-        <div class="fut-name" id="card-name">JUGADOR</div>
-        <div class="fut-stats-row">
-          <div class="fut-stat-col"><span class="fut-stat-lbl">ATA</span><span class="fut-stat-num" id="card-ata">99</span></div>
-          <div class="fut-stat-col"><span class="fut-stat-lbl">DEF</span><span class="fut-stat-num" id="card-def">99</span></div>
-          <div class="fut-stat-col"><span class="fut-stat-lbl">PAS</span><span class="fut-stat-num" id="card-pas">99</span></div>
-          <div class="fut-stat-col"><span class="fut-stat-lbl">POR</span><span class="fut-stat-num" id="card-gk">99</span></div>
-          <div class="fut-stat-col"><span class="fut-stat-lbl">VIC</span><span class="fut-stat-num" id="card-gan">99</span></div>
-          <div class="fut-stat-col"><span class="fut-stat-lbl">MVP</span><span class="fut-stat-num" id="card-mvp">99</span></div>
-        </div>
-      </div>
-      <div class="fut-bottom">
-        <span class="fut-flag">🇪🇸</span>
-        <span style="font-weight:800;font-size:0.8rem" id="card-mod">3V3</span>
-      </div>
-    </div>
-
-    <!-- HEXÁGONO PRO 6 -->
-    <div class="hex-container" id="view-pes" onclick="event.stopPropagation()">
-      <div class="hex-title" id="hex-name">JUGADOR</div>
-      <svg class="hex-svg" viewBox="0 0 200 200">
-        <polygon points="100,20 170,60 170,140 100,180 30,140 30,60" fill="none" stroke="#364b6e" stroke-width="2"/>
-        <polygon points="100,50 145,75 145,125 100,150 55,125 55,75" fill="none" stroke="#26364d" stroke-width="1"/>
-        <line x1="100" y1="20" x2="100" y2="180" stroke="#26364d" stroke-width="1"/>
-        <line x1="30" y1="60" x2="170" y2="140" stroke="#26364d" stroke-width="1"/>
-        <line x1="170" y1="60" x2="30" y2="140" stroke="#26364d" stroke-width="1"/>
-        <polygon id="hex-poly" points="100,20 170,60 170,140 100,180 30,140 30,60" fill="rgba(106,163,255,0.4)" stroke="#6aa3ff" stroke-width="3"/>
-        <text x="100" y="15" fill="#fff" font-size="10" text-anchor="middle" font-weight="bold">ATAQUE</text>
-        <text x="180" y="60" fill="#fff" font-size="10" text-anchor="start" font-weight="bold">PASES</text>
-        <text x="180" y="145" fill="#fff" font-size="10" text-anchor="start" font-weight="bold">VICTORIAS</text>
-        <text x="100" y="195" fill="#fff" font-size="10" text-anchor="middle" font-weight="bold">DEFENSA</text>
-        <text x="20" y="145" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">PORTERO</text>
-        <text x="20" y="60" fill="#fff" font-size="10" text-anchor="end" font-weight="bold">MVP</text>
-      </svg>
-      <div style="font-size:0.85rem;color:#93a4ba;font-weight:700" id="hex-stats-summary">ATA: 80 | DEF: 70</div>
-    </div>
-
   </div>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-
 const TABS_LISTA = ["1v1", "2v2", "3v3", "4v4", "5y6v", "7v7", "+7v", "total"];
 const CON_PORTERO = ["5v5", "6v6", "5y6v", "7v7", "full", "+7v"];
 
+let dbGlobal = { jugadores: {}, partidaHistorial: [] };
+let tiempoFiltro = "temp1"; // diario, semanal, mensual, temp1
+let tab = "total", key = "media", cargando = true;
+
 const ETIQUETA = {
-  media: { icon: "MEDIA", name: "Media General (Ponderada sobre 100)" },
-  matches: { icon: "🎮", name: "Partidos Jugados (PJ)" },
+  media: { icon: "MEDIA", name: "Media General" },
+  matches: { icon: "🎮", name: "PJ" },
   goals: { icon: "⚽", name: "Goles" },
   assists: { icon: "🅰️", name: "Asistencias" },
-  ga: { icon: "⚽+🅰️", name: "Goles + Asistencias (G+A)" },
-  gpm: { icon: "📊", name: "Promedio de Goles por Partido (G/PJ)" },
-  mvp: { icon: "⭐", name: "Premios MVP del partido" },
-  passesTotal: { icon: "👟", name: "Pases Totales" },
-  passPct: { icon: "🎯", name: "Porcentaje de Pases Acertados (%)" },
-  recoveries: { icon: "🛡️", name: "Balones Recuperados / Robos" },
   wins: { icon: "🥇", name: "Victorias" },
-  wr: { icon: "📈", name: "Porcentaje de Victorias (% Vict.)" },
-  streak: { icon: "🔥", name: "Racha Actual" },
-  bestStreak: { icon: "👑", name: "Mejor Racha Histórica" },
-  elo: { icon: "🏆", name: "Puntos ELO" },
-  saves: { icon: "🧤", name: "Paradas de Portero" },
-  cleanSheets: { icon: "🔒", name: "Porterías a Cero" }
+  elo: { icon: "🏆", name: "ELO" }
 };
 
-const ORDEN = {
-  media: "MEDIA",
-  goals: "⚽ Goles",
-  assists: "🅰️ Asistencias",
-  ga: "⚽+🅰️ G+A",
-  mvp: "⭐ MVP",
-  passesTotal: "👟 Pases",
-  passPct: "🎯 % Pases",
-  recoveries: "🛡️ Robos",
-  matches: "🎮 PJ",
-  wins: "🥇 Victorias",
-  streak: "🔥 Racha",
-  bestStreak: "👑 Mejor Racha",
-  elo: "🏆 ELO",
-  saves: "🧤 Paradas",
-  cleanSheets: "🔒 P. Cero"
-};
-
-const BASE = ["media", "matches", "goals", "assists", "ga", "gpm", "mvp", "passesTotal", "passPct", "recoveries", "wins", "wr"];
-
-function columnas(t) {
-  if (t === "total") return [...BASE, "bestStreak", "saves", "cleanSheets", "elo"];
-  
-  let cols = [...BASE, "streak", "bestStreak", "elo"];
-  if (t === "1v1") {
-    // Quitar pases totales y porcentaje de pases en 1v1
-    cols = cols.filter(c => c !== "passesTotal" && c !== "passPct");
-  }
-  if (CON_PORTERO.includes(t)) {
-    cols.push("saves", "cleanSheets");
-  }
-  return cols;
-}
-
-let data = [], tab = "total", key = "media", cargando = true, error = "";
-
-const num = (v) => (typeof v === "number" && isFinite(v) ? v : 0);
-
-function modsDe(p) {
-  return p && p.modalidades && typeof p.modalidades === "object" ? p.modalidades : { antiguo: p || {} };
-}
-
-function calcularAtributos(pData) {
-  const pjTotales = pData.matches || 1;
-  const pjPases = pData.matchesPasses || (tab !== "1v1" ? pjTotales : 0);
-  const pjGK = pData.matchesGK || (CON_PORTERO.includes(tab) ? pjTotales : 0);
-
-  const ata = Math.min(99, Math.round(((pData.ga / pjTotales) / 1.5) * 100));
-  const def = Math.min(99, Math.round(((pData.recoveries / pjTotales) / 4) * 100));
-  const volPases = pjPases > 0 ? (pData.passesTotal / pjPases) : 0;
-  const pas = Math.min(99, Math.round((pData.passPct * 0.6) + (Math.min(1, volPases / 15) * 40)));
-  const por = pjGK > 0 ? Math.min(99, Math.round(((pData.saves / pjGK) / 3) * 70 + ((pData.cleanSheets / pjGK) * 30))) : 50;
-  const gan = Math.min(99, Math.round((pData.wr * 0.7) + (Math.min(10, pData.bestStreak) * 3)));
-  const mvp = Math.min(99, Math.round(((pData.mvp / pjTotales) / 0.5) * 100));
-  const rat = Math.round((ata + def + pas + gan + mvp) / 5);
-
-  let pos = "MED";
-  if (ata > def && ata > por) pos = "DC";
-  else if (def > ata && def > por) pos = "DFC";
-  else if (por > 65) pos = "POR";
-
-  return { ata, def, pas, por, gan, mvp, rat, pos };
-}
-
-function vista(p, t) {
-  const mods = modsDe(p);
-  let r;
-
-  let targetKeys = [];
-  if (t === "total") {
-    targetKeys = Object.keys(mods);
-  } else if (t === "5y6v") {
-    targetKeys = ["5v5", "6v6"];
-  } else if (t === "+7v") {
-    targetKeys = Object.keys(mods).filter(k => k === "full" || (!["1v1","2v2","3v3","4v4","5v5","6v6","7v7"].includes(k)));
-  } else {
-    targetKeys = [t];
-  }
-
-  if (t === "total" || t === "5y6v" || t === "+7v") {
-    r = { matches: 0, goals: 0, assists: 0, wins: 0, saves: 0, cleanSheets: 0, streak: 0, bestStreak: 0, elo: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, matchesPasses: 0, matchesGK: 0 };
-    let totalElo = 0, countElo = 0;
-
-    for (const mKey of targetKeys) {
-      const m = mods[mKey];
-      if (!m) continue;
-      const pjMod = num(m.matches);
-      for (const k of ["matches", "goals", "assists", "wins", "saves", "cleanSheets", "passesTotal", "passesCompleted", "recoveries", "mvp"]) {
-        r[k] += num(m[k]);
-      }
-      r.streak = Math.max(r.streak, num(m.streak));
-      r.bestStreak = Math.max(r.bestStreak, num(m.bestStreak));
-      if (m.elo != null) { totalElo += num(m.elo); countElo++; }
-
-      if (mKey !== "1v1") r.matchesPasses += pjMod;
-      if (CON_PORTERO.includes(mKey)) r.matchesGK += pjMod;
-    }
-    r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
-  } else {
-    const m = mods[t];
-    if (!m) return null;
-    const pjMod = num(m.matches);
-    r = {
-      matches: pjMod, goals: num(m.goals), assists: num(m.assists), wins: num(m.wins),
-      saves: num(m.saves), cleanSheets: num(m.cleanSheets), streak: num(m.streak), bestStreak: num(m.bestStreak),
-      elo: m.elo == null ? 1000 : num(m.elo),
-      passesTotal: num(m.passesTotal), passesCompleted: num(m.passesCompleted), recoveries: num(m.recoveries),
-      mvp: num(m.mvp),
-      matchesPasses: t !== "1v1" ? pjMod : 0,
-      matchesGK: CON_PORTERO.includes(t) ? pjMod : 0
-    };
-  }
-
-  if (!(r.matches || r.goals || r.assists || r.wins || r.saves || r.cleanSheets || r.passesTotal || r.recoveries || r.mvp)) return null;
-  r.name = String(p && p.name != null ? p.name : "?");
-  r.avatar = p && p.avatar ? p.avatar : r.name.substring(0, 2).toUpperCase();
-  r.ga = r.goals + r.assists;
-  r.gpm = r.matches ? r.goals / r.matches : 0;
-  r.wr = r.matches ? (r.wins / r.matches) * 100 : 0;
-  r.passPct = r.passesTotal ? Math.round((r.passesCompleted / r.passesTotal) * 100) : 0;
-  
-  const calc = calcularAtributos(r);
-  r.media = calc.rat;
-
-  return r;
-}
-
-function fmt(k, v) { 
-  if (k === "gpm") return v.toFixed(2);
-  if (k === "wr" || k === "passPct") return Math.round(v) + "%";
-  return v; 
-}
-
-function tabsDisponibles() {
-  return TABS_LISTA;
-}
-
-const nombreTab = (t) => (t === "total" ? "Total" : t);
-
-function pintarTabs() {
-  const cont = $("tabs"); cont.textContent = "";
-  tabsDisponibles().forEach((t) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(t === tab));
-    b.textContent = nombreTab(t);
-    b.addEventListener("click", () => elegirTab(t));
-    cont.append(b);
-  });
-}
-
-function pintarOrden(cols) {
-  const cont = $("orden"); cont.textContent = "";
-  Object.keys(ORDEN).filter((k) => cols.includes(k)).forEach((k) => {
-    const b = document.createElement("button");
-    b.type = "button"; b.setAttribute("aria-pressed", String(k === key));
-    b.textContent = ORDEN[k];
-    b.addEventListener("click", () => { key = k; render(); });
-    cont.append(b);
-  });
-}
-
-function elegirTab(t) {
-  tab = t;
-  if (typeof location !== "undefined") location.hash = t;
+function elegirTiempo(t) {
+  tiempoFiltro = t;
+  document.querySelectorAll(".time-bar button").forEach(b => b.setAttribute("aria-selected", "false"));
+  event.target.setAttribute("aria-selected", "true");
   render();
 }
 
-function switchView(view) {
-  if (view === 'fifa') {
-    $("view-fifa").style.display = 'flex';
-    $("view-pes").classList.remove('active');
-    $("btn-view-fifa").classList.add('active');
-    $("btn-view-pes").classList.remove('active');
-  } else {
-    $("view-fifa").style.display = 'none';
-    $("view-pes").classList.add('active');
-    $("btn-view-fifa").classList.remove('active');
-    $("btn-view-pes").classList.add('active');
+function filtrarHistorialPorTiempo(historial) {
+  if (!historial || historial.length === 0) return [];
+  const ahora = Date.now();
+  return historial.filter(p => {
+    if (tiempoFiltro === "diario") return (ahora - p.timestamp) <= 24 * 60 * 60 * 1000;
+    if (tiempoFiltro === "semanal") return (ahora - p.timestamp) <= 7 * 24 * 60 * 60 * 1000;
+    if (tiempoFiltro === "mensual") return (ahora - p.timestamp) <= 30 * 24 * 60 * 60 * 1000;
+    return true; // temp1 (todo el registro)
+  });
+}
+
+function procesarDatosFiltrados() {
+  if (tiempoFiltro === "temp1") {
+    // Si es Temporada 1, usamos el objeto acumulado directamente
+    return Object.values(dbGlobal.jugadores || {});
   }
+  
+  // Para diario, semanal o mensual, recalculamos los acumulados a partir del historial de partidas filtrado
+  const filtrados = filtrarHistorialPorTiempo(dbGlobal.partidaHistorial);
+  const mapaJugadores = {};
+
+  filtrados.forEach(partido => {
+    const mod = partido.modalidad;
+    partido.participantes.forEach(p => {
+      const k = p.auth || p.name;
+      if (!mapaJugadores[k]) {
+        mapaJugadores[k] = { name: p.name, avatar: p.name.substring(0, 2).toUpperCase(), modalidades: {} };
+      }
+      if (!mapaJugadores[k].modalidades[mod]) {
+        mapaJugadores[k].modalidades[mod] = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000 };
+      }
+      const m = mapaJugadores[k].modalidades[mod];
+      m.matches++;
+      m.goals += (p.goals || 0);
+      m.assists += (p.assists || 0);
+      if (p.team === p.ganador) { m.wins++; m.elo += 25; }
+    });
+  });
+
+  return Object.values(mapaJugadores);
 }
 
-function abrirCarta(pData) {
-  const c = calcularAtributos(pData);
+function vista(p, t) {
+  const mods = p.modalidades || {};
+  let targetKeys = t === "total" ? Object.keys(mods) : [t];
+  let r = { matches: 0, goals: 0, assists: 0, wins: 0, elo: 1000 };
+  let totalElo = 0, countElo = 0;
 
-  $("card-name").textContent = pData.name;
-  $("card-avatar-num").textContent = pData.avatar || pData.name.substring(0, 2).toUpperCase();
-  $("card-rat").textContent = c.rat;
-  $("card-pos").textContent = c.pos;
-  $("card-ata").textContent = c.ata;
-  $("card-def").textContent = c.def;
-  $("card-pas").textContent = c.pas;
-  $("card-gk").textContent = c.por;
-  $("card-gan").textContent = c.gan;
-  $("card-mvp").textContent = c.mvp;
-  $("card-mod").textContent = nombreTab(tab).toUpperCase();
+  targetKeys.forEach(mKey => {
+    const m = mods[mKey];
+    if (!m) return;
+    r.matches += (m.matches || 0);
+    r.goals += (m.goals || 0);
+    r.assists += (m.assists || 0);
+    r.wins += (m.wins || 0);
+    if (m.elo != null) { totalElo += m.elo; countElo++; }
+  });
 
-  $("hex-name").textContent = pData.name;
-  $("hex-stats-summary").textContent = `ATA: ${c.ata} | DEF: ${c.def} | PAS: ${c.pas} | POR: ${c.por}`;
-
-  const calcPt = (val, angleDeg) => {
-    const rad = (angleDeg - 90) * (Math.PI / 180);
-    const r = (val / 100) * 80;
-    return `${100 + r * Math.cos(rad)},${100 + r * Math.sin(rad)}`;
-  };
-
-  const pAta = calcPt(c.ata, 0);
-  const pPas = calcPt(c.pas, 60);
-  const pGan = calcPt(c.gan, 120);
-  const pDef = calcPt(c.def, 180);
-  const pPor = calcPt(c.por, 240);
-  const pMvp = calcPt(c.mvp, 300);
-
-  $("hex-poly").setAttribute("points", `${pAta} ${pPas} ${pGan} ${pDef} ${pPor} ${pMvp}`);
-
-  switchView('fifa');
-  $("modal").classList.add("active");
+  r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
+  if (!r.matches && !r.goals) return null;
+  r.name = p.name;
+  r.media = Math.round(((r.goals + r.assists) / Math.max(1, r.matches)) * 30 + 50);
+  return r;
 }
 
-function cerrarCarta(e) {
-  if (e.target.id === "modal") $("modal").classList.remove("active");
-}
-
-function cerrarCartaDirecto() {
-  $("modal").classList.remove("active");
+function pintarTabs() {
+  const cont = $("tabs"); cont.textContent = "";
+  TABS_LISTA.forEach((t) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-selected", String(t === tab));
+    b.textContent = t;
+    b.addEventListener("click", () => { tab = t; render(); });
+    cont.append(b);
+  });
 }
 
 function render() {
-  if (!tabsDisponibles().includes(tab)) tab = "total";
-  const cols = columnas(tab);
-  if (!cols.includes(key) || !ORDEN[key]) key = "media";
   pintarTabs();
-  pintarOrden(cols);
-
-  const q = $("q").value.trim().toLowerCase();
-  const todos = data.map((p) => vista(p, tab)).filter(Boolean);
-  const list = todos.filter((p) => p.name.toLowerCase().includes(q))
-    .sort((a, b) => b[key] - a[key] || b.ga - a.ga || a.name.localeCompare(b.name));
-  const max = Math.max(1, ...list.map((p) => p[key]));
+  const datosJugadores = procesarDatosFiltrados();
+  const list = datosJugadores.map(p => vista(p, tab)).filter(Boolean)
+    .sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 
   const head = $("head"); head.textContent = "";
   const hr = document.createElement("tr");
-  
-  const thPos = document.createElement("th"); thPos.textContent = "#"; hr.append(thPos);
-  const thName = document.createElement("th"); thName.textContent = "Jugador"; hr.append(thName);
-
-  cols.forEach((c) => {
-    const th = document.createElement("th");
-    const item = ETIQUETA[c];
-    if (c === "media") {
-      th.textContent = "MEDIA";
-      th.style.fontWeight = "800";
-    } else {
-      const abbr = document.createElement("abbr");
-      abbr.title = item.name;
-      abbr.textContent = item.icon;
-      th.append(abbr);
-    }
-    hr.append(th);
+  ["#", "Jugador", "PJ", "Goles", "Asist.", "Victorias", "ELO"].forEach(text => {
+    const th = document.createElement("th"); th.textContent = text; hr.append(th);
   });
   head.append(hr);
 
   const tb = $("rows"); tb.textContent = "";
   list.forEach((p, i) => {
     const tr = document.createElement("tr");
-    if (i < 3 && p[key] > 0) tr.className = "top";
+    if (i < 0) tr.className = "top";
     const pos = document.createElement("td"); pos.className = "pos"; pos.textContent = i + 1; tr.append(pos);
     
     const nm = document.createElement("td"); nm.className = "name"; nm.textContent = p.name;
-    nm.title = "Haz clic para ver la carta FIFA y Hexágono de " + p.name;
-    nm.addEventListener("click", () => abrirCarta(p));
-    
-    const bar = document.createElement("i"); bar.style.width = (p[key] / max) * 100 + "%"; nm.append(bar); tr.append(nm);
-    cols.forEach((k) => { 
-      const td = document.createElement("td"); 
-      td.textContent = fmt(k, p[k]); 
-      if (k === "media") td.className = "media-col";
-      if (k === key) td.classList.add("key"); 
-      tr.append(td); 
+    nm.addEventListener("click", () => {
+      $("card-name").textContent = p.name;
+      $("card-info").textContent = `ELO: ${p.elo} | Goles: ${p.goals} | Partidos: ${p.matches}`;
+      $("modal").classList.add("active");
+    });
+    tr.append(nm);
+
+    [p.matches, p.goals, p.assists, p.wins, p.elo].forEach(val => {
+      const td = document.createElement("td"); td.textContent = val; tr.append(td);
     });
     tb.append(tr);
   });
 
-  const vacio = $("empty");
-  vacio.hidden = list.length > 0;
-  vacio.textContent = cargando ? "Cargando…"
-    : error && data.length === 0 ? error
-    : data.length === 0 ? "Aún no hay partidas registradas. Juega una partida completa en la sala y aparecerá aquí."
-    : todos.length === 0 ? "Todavía no hay datos en esta modalidad." : "Ningún jugador coincide con la búsqueda.";
-
-  $("sub").textContent = cargando ? "Cargando…"
-    : error && data.length === 0 ? "No se pudieron cargar las estadísticas"
-    : todos.length + (todos.length === 1 ? " jugador · " : " jugadores · ") + todos.reduce((s, p) => s + p.goals, 0) + " goles registrados · " +
-      (tab === "total" ? "Total (todas las modalidades)" : "Modalidad " + tab) + (error ? " · (no se pudo actualizar)" : "");
-}
-
-function tabDeHash() {
-  const h = (typeof location !== "undefined" ? location.hash : "").replace("#", "");
-  return TABS_LISTA.includes(h) ? h : null;
-}
-
-function mensajeError(e) {
-  if (typeof location !== "undefined" && location.protocol === "file:") {
-    return "Estás abriendo el archivo directamente (doble clic) y el navegador no deja leer stats.json. Ábrelo desde http://localhost:3000 con el bot en marcha, o desde la web publicada en GitHub.";
-  }
-  return "No se pudo leer stats.json (" + (e && e.message ? e.message : "error") + "). Comprueba que está en la misma carpeta que index.html.";
+  $("sub").textContent = cargando ? "Cargando…" : `Mostrando periodo [${tiempoFiltro.toUpperCase()}] · ${list.length} jugadores activos. Temporada 1 finaliza el 5 de Feb de 2027.`;
 }
 
 async function load() {
   try {
     const r = await fetch("stats.json?t=" + Date.now());
-    if (!r.ok) throw new Error("error HTTP " + r.status);
-    let json;
-    try { json = await r.json(); } catch (e) { throw new Error("el archivo no es un JSON válido"); }
-    data = Array.isArray(json) ? json : (json && typeof json === "object" ? Object.values(json) : []);
-    error = "";
-  } catch (e) {
-    error = mensajeError(e);
-  }
+    if (r.ok) {
+      const json = await r.json();
+      dbGlobal = Array.isArray(json) ? { jugadores: {}, partidaHistorial: [] } : json;
+    }
+  } catch (e) {}
   cargando = false;
   render();
 }
 
-$("q").addEventListener("input", render);
-window.addEventListener("hashchange", () => { const t = tabDeHash(); if (t && t !== tab) { tab = t; render(); } });
-tab = tabDeHash() || "total";
-render();
 load(); setInterval(load, 30000);
 </script>
 </body>
