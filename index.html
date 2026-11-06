@@ -298,7 +298,13 @@ function procesarDatosFiltrados() {
 function calcularAtributosPES(r) {
   const pj = Math.max(1, r.matches);
   const att = Math.min(99, Math.round(40 + ((r.goals * 1.5 + r.assists) / pj) * 25));
-  const def = Math.min(99, Math.round(40 + ((r.recoveries + r.saves * 1.2 + r.cleanSheets * 3) / pj) * 20));
+  // DEF: acciones defensivas por partido con curva de saturación (rendimientos decrecientes).
+  // Antes era lineal (x20): con ~3 robos por partido ya se llegaba al tope de 99 y todos salían iguales.
+  // Con DEF_K = 14: 5 acc/partido ≈ 62, 10 ≈ 71, 20 ≈ 85, 35 ≈ 94.
+  // Si todos salen altos, sube DEF_K; si salen bajos, bájalo.
+  const DEF_K = 14;
+  const defAcciones = (r.recoveries + r.saves * 1.2 + r.cleanSheets * 3) / pj;
+  const def = Math.min(99, Math.max(40, Math.round(40 + 59 * (1 - Math.exp(-defAcciones / DEF_K)))));
   // PAS: combina precisión de pase y volumen de pases completados por partido.
   // Si no hay pases registrados, parte de 40 y no inventa un porcentaje del 50%.
   const passPct = r.passesTotal > 0 ? (r.passesCompleted / r.passesTotal) : 0;
