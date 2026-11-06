@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>F7 Ranking Room - Temporada 1</title>
 <style>
-:root{--bg:#eef2f6;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#cbd5e1;--blue:#1e5bb8;--gold:#b07800}
-@media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429}}
+:root{--bg:#eef2f6;--card:#fff;--ink:#0f1b2d;--mut:#5b6b80;--line:#cbd5e1;--blue:#1e5bb8;--gold:#b07800;--red:#dc2626}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1624;--card:#142033;--ink:#e8eef6;--mut:#93a4ba;--line:#26364d;--blue:#6aa3ff;--gold:#f0b429;--red:#ef4444}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow","Segoe UI",system-ui,sans-serif}
 main{max-width:1280px;margin:0 auto;padding:24px 12px 64px}
@@ -15,6 +15,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2rem
 .time-bar, .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
 .time-bar button, .tabs button{flex:0 0 auto;font:inherit;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer}
 .time-bar button[aria-selected=true], .tabs button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.tabs button.tab-partidos{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
 .bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .bar input{flex:1;min-width:140px;font:inherit;font-size:.85rem;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px}
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
@@ -53,10 +54,10 @@ td.name:hover{text-decoration:underline}
   </div>
 
   <div class="tabs" id="tabs" role="tablist"></div>
-  <div class="bar"><input id="q" type="search" placeholder="Buscar jugador..." oninput="render()"></div>
+  <div class="bar" id="search-bar"><input id="q" type="search" placeholder="Buscar jugador..." oninput="render()"></div>
   <div class="wrap">
     <table><thead id="head"></thead><tbody id="rows"></tbody></table>
-    <div class="empty" id="empty" hidden>No se encontraron jugadores en este periodo.</div>
+    <div class="empty" id="empty" hidden>No se encontraron registros en este periodo.</div>
   </div>
 </main>
 
@@ -85,7 +86,7 @@ td.name:hover{text-decoration:underline}
 
 <script>
 const $ = (id) => document.getElementById(id);
-const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full"];
+const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full", "partidos"];
 
 let dbGlobal = { jugadores: {}, partidaHistorial: [] };
 let tiempoFiltro = "temp1";
@@ -138,38 +139,21 @@ function procesarDatosFiltrados() {
 
 function calcularAtributosPES(r) {
   const pj = Math.max(1, r.matches);
-  
-  // 1. ATAQUE (ATT)
   const att = Math.min(99, Math.round(40 + ((r.goals * 1.5 + r.assists) / pj) * 25));
-
-  // 2. DEFENSA (DEF) - Incluye Recuperaciones, Paradas y Porterías a cero
   const def = Math.min(99, Math.round(40 + ((r.recoveries + r.saves * 1.2 + r.cleanSheets * 3) / pj) * 20));
-
-  // 3. TÉCNICA (TEC) - Pases y asistencias
   const passPct = r.passesTotal > 0 ? (r.passesCompleted / r.passesTotal) : 0.5;
   const tec = Math.min(99, Math.round(passPct * 60 + (r.assists / pj) * 25));
-
-  // 4. MVP / IMPACTO - Rachas + MVPs (Sustituye a Pace)
   const mvpAttr = Math.min(99, Math.round(40 + (r.mvp / pj) * 50 + (r.bestStreak || 0) * 3));
-
-  // 5. EXPERIENCIA / RESISTENCIA (EXP)
   const exp = Math.min(99, Math.round(40 + (Math.log(pj + 1) / Math.log(1.05))));
-
-  // 6. MENTALIDAD / ELO (MEN)
   const men = Math.min(99, Math.max(40, Math.round(40 + (r.elo - 800) / 10)));
-
-  // MEDIA GLOBAL (OVR) EQUILIBRADA
   const eloContrib = Math.max(40, 50 + (r.elo - 1000) / 15);
   const winRateContrib = ((r.wins / pj) * 30) + 50;
   const outputContrib = Math.min(99, 40 + ((r.goals + r.assists) / pj) * 25);
-  
   const ovr = Math.min(99, Math.round((eloContrib * 0.4) + (winRateContrib * 0.3) + (outputContrib * 0.3)));
-
   return { att, def, tec, mvpAttr, exp, men, ovr };
 }
 
 function generarSVGRomboPES(stats) {
-  // Centro y radio del hexágono
   const cx = 100, cy = 90, r = 65;
   const labels = ["ATT", "DEF", "TEC", "MVP", "EXP", "MEN"];
   const vals = [stats.att, stats.def, stats.tec, stats.mvpAttr, stats.exp, stats.men];
@@ -198,11 +182,7 @@ function generarSVGRomboPES(stats) {
     labelTags += `<text x="${lx}" y="${ly + 4}" font-size="10" font-weight="bold" text-anchor="middle" fill="#111">${labels[i]} ${vals[i]}</text>`;
   }
 
-  return `
-    ${gridLines}
-    <polygon points="${polyPts.join(" ")}" fill="rgba(30,91,184,0.5)" stroke="#1e5bb8" stroke-width="2"/>
-    ${labelTags}
-  `;
+  return `${gridLines}<polygon points="${polyPts.join(" ")}" fill="rgba(30,91,184,0.5)" stroke="#1e5bb8" stroke-width="2"/>${labelTags}`;
 }
 
 function obtenerVistaJugador(p, modo) {
@@ -251,7 +231,8 @@ function pintarTabs() {
     const b = document.createElement("button");
     b.type = "button"; 
     b.setAttribute("aria-selected", String(t === tab));
-    b.textContent = t.toUpperCase();
+    b.textContent = t.toUpperCase() === "PARTIDOS" ? "🔴 PARTIDOS" : t.toUpperCase();
+    if (t === "partidos") b.className = "tab-partidos";
     b.addEventListener("click", () => { tab = t; render(); });
     cont.append(b);
   });
@@ -260,6 +241,68 @@ function pintarTabs() {
 function render() {
   pintarTabs();
   const filtroTexto = $("q").value.toLowerCase();
+  const head = $("head");
+  const tb = $("rows");
+  
+  head.textContent = "";
+  tb.textContent = "";
+
+  // SI SE SELECCIONA LA PESTAÑA DE PARTIDOS
+  if (tab === "partidos") {
+    $("search-bar").style.display = "none";
+    const hr = document.createElement("tr");
+    ["Fecha / Hora", "Modalidad", "Duración", "Marcador (Rojo vs Azul)", "Goleadores y Detalles"].forEach(text => {
+      const th = document.createElement("th"); th.textContent = text; hr.append(th);
+    });
+    head.append(hr);
+
+    const historial = (dbGlobal.partidaHistorial || []).slice().reverse(); // Los más recientes primero
+
+    if (historial.length === 0) {
+      $("empty").hidden = false;
+    } else {
+      $("empty").hidden = true;
+      historial.forEach((partido) => {
+        const tr = document.createElement("tr");
+        
+        const fechaTd = document.createElement("td");
+        fechaTd.textContent = new Date(partido.timestamp).toLocaleString();
+        tr.append(fechaTd);
+
+        const modTd = document.createElement("td");
+        modTd.textContent = (partido.modalidad || "N/D").toUpperCase();
+        tr.append(modTd);
+
+        const durTd = document.createElement("td");
+        durTd.textContent = partido.duracionSegundos ? `${Math.floor(partido.duracionSegundos / 60)}m ${partido.duracionSegundos % 60}s` : "-";
+        tr.append(durTd);
+
+        const marcTd = document.createElement("td");
+        const rMar = partido.marcador ? partido.marcador.red : 0;
+        const bMar = partido.marcador ? partido.marcador.blue : 0;
+        marcTd.innerHTML = `<span style="color:#ef4444;font-weight:bold">${rMar}</span> - <span style="color:#3b82f6;font-weight:bold">${bMar}</span>`;
+        tr.append(marcTd);
+
+        const detTd = document.createElement("td");
+        detTd.style.textAlign = "left";
+        const parts = partido.participantes || [];
+        const resumenGoles = parts
+          .filter(p => (p.goals || 0) > 0 || (p.assists || 0) > 0)
+          .map(p => `${p.name} (⚽ ${p.goals || 0}${p.assists ? `, 🅰️ ${p.assists}` : ''})`)
+          .join(" | ");
+        detTd.textContent = resumenGoles || "Sin goles registrados";
+        tr.append(detTd);
+
+        tb.append(tr);
+      });
+    }
+
+    $("sub").textContent = `Historial de partidos recientes · Mostrando los últimos encuentros jugados.`;
+    return;
+  }
+
+  // VISTA NORMAL DE RANKING / JUGADORES
+  $("search-bar").style.display = "flex";
   const datosJugadores = procesarDatosFiltrados();
   
   let list = datosJugadores
@@ -268,15 +311,12 @@ function render() {
     .filter(p => p.name.toLowerCase().includes(filtroTexto))
     .sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 
-  const head = $("head"); head.textContent = "";
   const hr = document.createElement("tr");
   ["#", "Jugador", "OVR", "PJ", "V", "Goles", "Asist.", "Paradas", "Pases (%)", "MVP", "ELO"].forEach(text => {
     const th = document.createElement("th"); th.textContent = text; hr.append(th);
   });
   head.append(hr);
 
-  const tb = $("rows"); tb.textContent = "";
-  
   if (list.length === 0) {
     $("empty").hidden = false;
   } else {
