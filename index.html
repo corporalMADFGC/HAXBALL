@@ -20,6 +20,8 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(1.8r
 .kpi{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 12px}
 .kpi b{display:block;font-size:1.5rem;line-height:1.1;font-family:"Barlow Condensed","Arial Narrow",sans-serif}
 .kpi span{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;opacity:.8}
+.countdown{display:inline-block;margin:0 0 12px;padding:8px 12px;border-radius:10px;font-size:.92rem;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.countdown.fin{background:rgba(240,180,41,.25);border-color:rgba(240,180,41,.6)}
 
 .time-bar,.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line)}
 .time-bar button,.tabs button{flex:0 0 auto;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;cursor:pointer;transition:transform .1s}
@@ -116,15 +118,11 @@ td.name:hover .nm{text-decoration:underline}
   <header class="hero">
     <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
     <p class="sub" id="sub">Cargando…</p>
+    <div class="countdown" id="countdown"></div>
     <div class="kpis" id="kpis"></div>
   </header>
 
-  <div class="time-bar" id="time-bar" role="tablist">
-    <button type="button" aria-selected="false" onclick="elegirTiempo('diario')">📅 Diario</button>
-    <button type="button" aria-selected="false" onclick="elegirTiempo('semanal')">📅 Semanal</button>
-    <button type="button" aria-selected="false" onclick="elegirTiempo('mensual')">📅 Mensual</button>
-    <button type="button" aria-selected="true" onclick="elegirTiempo('temp1')">🏆 Temporada 1</button>
-  </div>
+  <div class="time-bar" id="time-bar" role="tablist"></div>
 
   <div class="tabs" id="tabs" role="tablist"></div>
 
@@ -184,9 +182,17 @@ const $ = (id) => document.getElementById(id);
 const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full", "partidos"];
 
 let dbGlobal = { jugadores: {}, partidaHistorial: [] };
+// "temp1" = temporada en curso (se llama así por compatibilidad; el número real es temporadaNum).
+// "arch:N" = temporada N ya cerrada, leída de temporada-N.json.
 let tiempoFiltro = "temp1";
 let tab = "total";
 let cargando = true;
+
+// Temporada en curso. stats.json puede sobrescribir estos valores con { temporada: 2, temporadaFin: "2027-05-01T00:00:00+02:00" }
+let temporadaNum = 1;
+let temporadaFin = new Date("2027-02-01T00:00:00+01:00").getTime();   // 1 feb 2027, hora de España
+const dbArchivo = {};          // temporadas cerradas: { 1: { jugadores, partidaHistorial } }
+const archivoIntentado = {};
 
 // Ordenación del ranking
 let sortKey = "elo";
@@ -215,12 +221,50 @@ const SORT_OPTS = [
 
 function resetLimite() { matchLimit = 20; }
 
+function esTemporada() { return tiempoFiltro === "temp1" || tiempoFiltro.startsWith("arch:"); }
+function dbActiva() {
+  if (tiempoFiltro.startsWith("arch:")) return dbArchivo[tiempoFiltro.slice(5)] || { jugadores: {}, partidaHistorial: [] };
+  return dbGlobal;
+}
+function nombrePeriodo() {
+  if (tiempoFiltro === "temp1") return "Temporada " + temporadaNum;
+  if (tiempoFiltro.startsWith("arch:")) return "Temporada " + tiempoFiltro.slice(5);
+  return tiempoFiltro;
+}
+
 function elegirTiempo(t) {
   tiempoFiltro = t;
   matchLimit = 20;
-  document.querySelectorAll(".time-bar button").forEach(b => b.setAttribute("aria-selected", "false"));
-  event.target.setAttribute("aria-selected", "true");
   render();
+}
+
+function pintarTiempo() {
+  const cont = $("time-bar"); cont.textContent = "";
+  const items = [["diario", "📅 Diario"], ["semanal", "📅 Semanal"], ["mensual", "📅 Mensual"], ["temp1", "🏆 Temporada " + temporadaNum]];
+  Object.keys(dbArchivo).map(Number).sort((a, b) => a - b).forEach(n => items.push(["arch:" + n, "📁 Temporada " + n]));
+  items.forEach(([k, t]) => {
+    const b = el("button", null, t);
+    b.type = "button";
+    b.setAttribute("aria-selected", String(k === tiempoFiltro));
+    b.addEventListener("click", () => elegirTiempo(k));
+    cont.append(b);
+  });
+}
+
+function pintarCuenta() {
+  const c = $("countdown");
+  const resta = temporadaFin - Date.now();
+  const fecha = new Date(temporadaFin).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Madrid" });
+  if (resta > 0) {
+    const s = Math.floor(resta / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), seg = s % 60;
+    const p = (n) => String(n).padStart(2, "0");
+    c.className = "countdown";
+    c.textContent = `⏳ La Temporada ${temporadaNum} termina en ${d}d ${p(h)}h ${p(m)}m ${p(seg)}s · ${fecha}`;
+  } else {
+    c.className = "countdown fin";
+    c.textContent = `🏁 La Temporada ${temporadaNum} terminó el ${fecha}. Esperando el reinicio.`;
+  }
 }
 
 function cambiarOrden(k) { sortKey = k; sortDir = -1; render(); }
@@ -246,8 +290,8 @@ function mvpDelPartido(p) {            // misma regla que el bot: mayor puntosMV
   return mejor;
 }
 function partidosPeriodo() {
-  const historial = dbGlobal.partidaHistorial || [];
-  if (tiempoFiltro === "temp1") return historial;
+  const historial = dbActiva().partidaHistorial || [];
+  if (esTemporada()) return historial;
   const ms = tiempoFiltro === "diario" ? 864e5 : tiempoFiltro === "semanal" ? 7 * 864e5 : 30 * 864e5;
   const ahora = Date.now();
   return historial.filter(p => (ahora - p.timestamp) <= ms);
@@ -256,10 +300,11 @@ function fmtDur(s) { return s ? `${Math.floor(s / 60)}m ${String(s % 60).padStar
 function fmtPts(n) { return (Math.round(n * 10) / 10).toString(); }
 
 function procesarDatosFiltrados() {
-  const jugOriginales = dbGlobal.jugadores || {};
-  const historial = dbGlobal.partidaHistorial || [];
+  const db = dbActiva();
+  const jugOriginales = db.jugadores || {};
+  const historial = db.partidaHistorial || [];
 
-  if (tiempoFiltro === "temp1" || historial.length === 0) {
+  if (esTemporada() || historial.length === 0) {
     return Object.values(jugOriginales);
   }
 
@@ -430,7 +475,7 @@ function pintarKpis(listaJugadores) {
   const k = $("kpis"); k.textContent = "";
   const items = [
     [listaJugadores, "Jugadores"],
-    [ps.length, tiempoFiltro === "temp1" ? "Partidos recientes" : "Partidos"],
+    [ps.length, esTemporada() ? "Partidos recientes" : "Partidos"],
     [goles, "Goles en esos partidos"],
     [ultimo ? new Date(ultimo).toLocaleDateString() : "-", "Último partido"]
   ];
@@ -569,6 +614,9 @@ function pintarMatches() {
 }
 
 function render() {
+  document.title = "F7 Ranking Room - Temporada " + temporadaNum;
+  pintarTiempo();
+  pintarCuenta();
   pintarTabs();
   const esPartidos = tab === "partidos";
   $("sort-ctl").style.display = esPartidos ? "none" : "flex";
@@ -655,7 +703,33 @@ function render() {
     });
   }
 
-  $("sub").textContent = cargando ? "Cargando…" : `Periodo [${tiempoFiltro.toUpperCase()}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores · ordenado por ${etiquetaOrden(sortKey).toLowerCase()}`;
+  $("sub").textContent = cargando ? "Cargando…" : `Periodo [${nombrePeriodo().toUpperCase()}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores · ordenado por ${etiquetaOrden(sortKey).toLowerCase()}`;
+}
+
+function normalizarDb(json) {
+  if (Array.isArray(json)) {
+    const db = { jugadores: {}, partidaHistorial: [] };
+    json.forEach(j => { if (j && j.name) db.jugadores[j.auth || j.name] = j; });
+    return db;
+  }
+  if (json && typeof json === "object") {
+    return { jugadores: json.jugadores || json, partidaHistorial: json.partidaHistorial || [] };
+  }
+  return { jugadores: {}, partidaHistorial: [] };
+}
+
+// Carga temporada-1.json, temporada-2.json... de las temporadas ya cerradas (una sola vez cada una)
+async function cargarArchivos() {
+  for (let n = 1; n < temporadaNum; n++) {
+    if (dbArchivo[n] || archivoIntentado[n]) continue;
+    archivoIntentado[n] = true;
+    try {
+      const r = await fetch(`temporada-${n}.json?t=` + Date.now());
+      if (r.ok) dbArchivo[n] = normalizarDb(await r.json());
+    } catch (e) {
+      console.warn(`No se pudo cargar temporada-${n}.json:`, e);
+    }
+  }
 }
 
 async function load() {
@@ -663,23 +737,26 @@ async function load() {
     const r = await fetch("stats.json?t=" + Date.now());
     if (r.ok) {
       const json = await r.json();
-      if (Array.isArray(json)) {
-        dbGlobal = { jugadores: {}, partidaHistorial: [] };
-        json.forEach(j => { if (j && j.name) dbGlobal.jugadores[j.auth || j.name] = j; });
-      } else if (json && typeof json === "object") {
-        dbGlobal.jugadores = json.jugadores || json;
-        dbGlobal.partidaHistorial = json.partidaHistorial || [];
+      dbGlobal = normalizarDb(json);
+      if (json && typeof json === "object" && !Array.isArray(json)) {
+        if (+json.temporada > 0) temporadaNum = +json.temporada;
+        if (json.temporadaFin) {
+          const f = new Date(json.temporadaFin).getTime();
+          if (!isNaN(f)) temporadaFin = f;
+        }
       }
     }
   } catch (e) {
     console.error("Error al cargar stats.json:", e);
   }
   cargando = false;
+  await cargarArchivos();
   render();
 }
 
 load();
 setInterval(load, 15000);
+setInterval(pintarCuenta, 1000);
 </script>
 </body>
 </html>
