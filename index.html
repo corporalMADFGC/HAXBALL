@@ -299,22 +299,26 @@ function calcularAtributosPES(r) {
   const pj = Math.max(1, r.matches);
   const att = Math.min(99, Math.round(40 + ((r.goals * 1.5 + r.assists) / pj) * 25));
   const def = Math.min(99, Math.round(40 + ((r.recoveries + r.saves * 1.2 + r.cleanSheets * 3) / pj) * 20));
-  const passPct = r.passesTotal > 0 ? (r.passesCompleted / r.passesTotal) : 0.5;
-  const tec = Math.min(99, Math.round(passPct * 60 + (r.assists / pj) * 25));
-  const mvpAttr = Math.min(99, Math.round(40 + (r.mvp / pj) * 50 + (r.bestStreak || 0) * 3));
-  const exp = Math.min(99, Math.round(40 + (Math.log(pj + 1) / Math.log(1.05))));
+  // PAS: combina precisión de pase y volumen de pases completados por partido.
+  // Si no hay pases registrados, parte de 40 y no inventa un porcentaje del 50%.
+  const passPct = r.passesTotal > 0 ? (r.passesCompleted / r.passesTotal) : 0;
+  const passesPerMatch = r.passesCompleted / pj;
+  const pas = Math.min(99, Math.max(40, Math.round(40 + passPct * 40 + Math.min(19, passesPerMatch * 5))));
+  const mvpAttr = Math.min(99, Math.max(40, Math.round(40 + (r.mvp / pj) * 50 + (r.bestStreak || 0) * 3)));
+  // EXP progresa de forma gradual: evita llegar a 99 con apenas unos 20 partidos.
+  const exp = Math.min(99, Math.round(40 + 12 * Math.log(pj + 1)));
   const men = Math.min(99, Math.max(40, Math.round(40 + (r.elo - 800) / 10)));
   const eloContrib = Math.max(40, 50 + (r.elo - 1000) / 15);
   const winRateContrib = ((r.wins / pj) * 30) + 50;
   const outputContrib = Math.min(99, 40 + ((r.goals + r.assists) / pj) * 25);
   const ovr = Math.min(99, Math.round((eloContrib * 0.4) + (winRateContrib * 0.3) + (outputContrib * 0.3)));
-  return { att, def, tec, mvpAttr, exp, men, ovr };
+  return { att, def, pas, mvpAttr, exp, men, ovr };
 }
 
 function generarSVGRomboPES(stats) {
   const cx = 100, cy = 90, r = 65;
-  const labels = ["ATT", "DEF", "TEC", "MVP", "EXP", "MEN"];
-  const vals = [stats.att, stats.def, stats.tec, stats.mvpAttr, stats.exp, stats.men];
+  const labels = ["ATT", "PAS", "MVP", "DEF", "EXP", "MEN"];
+  const vals = [stats.att, stats.pas, stats.mvpAttr, stats.def, stats.exp, stats.men];
   
   let gridLines = "";
   for (let level = 0.25; level <= 1; level += 0.25) {
