@@ -27,8 +27,14 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(1.8r
 .time-bar button,.tabs button{flex:0 0 auto;font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;cursor:pointer;transition:transform .1s}
 .time-bar button:hover,.tabs button:hover{transform:translateY(-1px)}
 .time-bar button[aria-selected=true],.tabs button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
-.tabs button.tab-partidos{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
-.tabs button.tab-partidos[aria-selected=false]{opacity:.75}
+/* Fila superior: Temporada (azul) y Partidos (rojo) siempre con su color; separador; Diario/Semanal/Mensual en blanco */
+.time-bar{padding:5px 5px 8px;align-items:center}
+.time-bar .sep{flex:0 0 auto;width:1px;height:24px;background:var(--line);margin:0 12px}
+.time-bar button.tab-temp{background:var(--blue)!important;border-color:var(--blue)!important;color:#fff!important}
+.time-bar button.tab-partidos{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
+.time-bar button.tab-temp[aria-selected=false],.time-bar button.tab-partidos[aria-selected=false]{opacity:.7}
+.time-bar button.tab-temp[aria-selected=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--blue)}
+.time-bar button.tab-partidos[aria-selected=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--red)}
 
 /* BARRA DE CONTROLES */
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
@@ -239,7 +245,7 @@ td.name:hover .nm{text-decoration:underline}
 
 <script>
 const $ = (id) => document.getElementById(id);
-const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full", "partidos"];
+const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full"];   // "partidos" es un botón de la fila superior (tab === "partidos")
 
 let dbGlobal = { jugadores: {}, partidaHistorial: [] };
 // "temp1" = temporada en curso (se llama así por compatibilidad; el número real es temporadaNum).
@@ -298,17 +304,24 @@ function elegirTiempo(t) {
   render();
 }
 
+// Fila superior: [🏆 Temporada N (azul)] [🔴 Partidos (rojo)] | [Diario] [Semanal] [Mensual] [📁 temporadas cerradas]
+// Periodo (tiempoFiltro) y vista de partidos (tab === "partidos") se combinan: p. ej. Diario + Partidos = partidos de hoy.
 function pintarTiempo() {
   const cont = $("time-bar"); cont.textContent = "";
-  const items = [["diario", "📅 Diario"], ["semanal", "📅 Semanal"], ["mensual", "📅 Mensual"], ["temp1", "🏆 Temporada " + temporadaNum]];
-  Object.keys(dbArchivo).map(Number).sort((a, b) => a - b).forEach(n => items.push(["arch:" + n, "📁 Temporada " + n]));
-  items.forEach(([k, t]) => {
-    const b = el("button", null, t);
+  const boton = (texto, activo, onClick, cls) => {
+    const b = el("button", cls || null, texto);
     b.type = "button";
-    b.setAttribute("aria-selected", String(k === tiempoFiltro));
-    b.addEventListener("click", () => elegirTiempo(k));
+    b.setAttribute("aria-selected", String(activo));
+    b.addEventListener("click", onClick);
     cont.append(b);
-  });
+  };
+  boton("🏆 Temporada " + temporadaNum, tiempoFiltro === "temp1", () => elegirTiempo("temp1"), "tab-temp");
+  boton("🔴 PARTIDOS", tab === "partidos", () => { tab = "partidos"; matchLimit = 20; render(); }, "tab-partidos");
+  cont.append(el("span", "sep"));
+  [["diario", "📅 Diario"], ["semanal", "📅 Semanal"], ["mensual", "📅 Mensual"]]
+    .forEach(([k, t]) => boton(t, tiempoFiltro === k, () => elegirTiempo(k)));
+  Object.keys(dbArchivo).map(Number).sort((a, b) => a - b)
+    .forEach(n => boton("📁 Temporada " + n, tiempoFiltro === "arch:" + n, () => elegirTiempo("arch:" + n)));
 }
 
 function pintarCuenta() {
@@ -349,12 +362,25 @@ function mvpDelPartido(p) {            // misma regla que el bot: mayor puntosMV
   });
   return mejor;
 }
+// Ventanas por día natural en hora de España, igual que el bot:
+// Diario = hoy (desde las 00:00) · Semanal = hoy + 6 días anteriores · Mensual = hoy + 29 anteriores.
+const DIAS_PERIODO = { diario: 1, semanal: 7, mensual: 30 };
+const DESC_PERIODO = { diario: "hoy", semanal: "últimos 7 días", mensual: "últimos 30 días" };
+const FMT_DIA = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" });
+const diaClave = (ms) => FMT_DIA.format(new Date(ms));          // "2026-11-07"
+
+// Los periodos cortos los calcula el bot y los publica en stats.json → periodos.{diario,semanal,mensual}
+// ({ jugadores, resumen:{partidos,goles,ultimo} }). El historial de partidos solo trae los últimos que publica el bot.
+function periodoPublicado() {
+  const per = dbGlobal.periodos && dbGlobal.periodos[tiempoFiltro];
+  return per && per.jugadores ? per : null;
+}
+
 function partidosPeriodo() {
   const historial = dbActiva().partidaHistorial || [];
   if (esTemporada()) return historial;
-  const ms = tiempoFiltro === "diario" ? 864e5 : tiempoFiltro === "semanal" ? 7 * 864e5 : 30 * 864e5;
-  const ahora = Date.now();
-  return historial.filter(p => (ahora - p.timestamp) <= ms);
+  const limite = diaClave(Date.now() - (DIAS_PERIODO[tiempoFiltro] - 1) * 864e5);
+  return historial.filter(p => diaClave(p.timestamp) >= limite);
 }
 function fmtDur(s) { return s ? `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s` : "-"; }
 function fmtPts(n) { return (Math.round(n * 10) / 10).toString(); }
@@ -364,9 +390,14 @@ function procesarDatosFiltrados() {
   const jugOriginales = db.jugadores || {};
   const historial = db.partidaHistorial || [];
 
-  if (esTemporada() || historial.length === 0) {
-    return Object.values(jugOriginales);
-  }
+  if (esTemporada()) return Object.values(jugOriginales);
+
+  // Diario / Semanal / Mensual: datos ya acumulados por el bot (completos y con ELO real del periodo)
+  const per = periodoPublicado();
+  if (per) return Object.values(per.jugadores);
+
+  // Respaldo para un stats.json antiguo sin "periodos": se recalcula con el historial publicado (incompleto)
+  if (historial.length === 0) return Object.values(jugOriginales);
 
   const mapaJugadores = {};
   partidosPeriodo().forEach(partido => {
@@ -520,8 +551,7 @@ function pintarTabs() {
     const b = document.createElement("button");
     b.type = "button";
     b.setAttribute("aria-selected", String(t === tab));
-    b.textContent = t.toUpperCase() === "PARTIDOS" ? "🔴 PARTIDOS" : t.toUpperCase();
-    if (t === "partidos") b.className = "tab-partidos";
+    b.textContent = t.toUpperCase();
     b.addEventListener("click", () => { tab = t; matchLimit = 20; render(); });
     cont.append(b);
   });
@@ -529,13 +559,17 @@ function pintarTabs() {
 
 function pintarKpis(listaJugadores) {
   const ps = partidosPeriodo();
-  let goles = 0;
-  ps.forEach(p => { if (p.marcador) goles += (+p.marcador.red || 0) + (+p.marcador.blue || 0); });
-  const ultimo = ps.length ? ps[ps.length - 1].timestamp : null;
+  const per = esTemporada() ? null : periodoPublicado();
+  let goles = 0, nPartidos = ps.length, ultimo = ps.length ? ps[ps.length - 1].timestamp : null;
+  if (per) {                                          // totales reales del periodo, calculados por el bot
+    goles = per.resumen.goles; nPartidos = per.resumen.partidos; ultimo = per.resumen.ultimo || null;
+  } else {
+    ps.forEach(p => { if (p.marcador) goles += (+p.marcador.red || 0) + (+p.marcador.blue || 0); });
+  }
   const k = $("kpis"); k.textContent = "";
   const items = [
     [listaJugadores, "Jugadores"],
-    [ps.length, esTemporada() ? "Partidos recientes" : "Partidos"],
+    [nPartidos, esTemporada() ? "Partidos recientes" : "Partidos"],
     [goles, "Goles en esos partidos"],
     [ultimo ? new Date(ultimo).toLocaleDateString() : "-", "Último partido"]
   ];
@@ -777,7 +811,10 @@ function pintarMatches() {
     grid.append(card);
   });
 
-  $("sub").textContent = `Historial de partidos · ${lista.length} partido${lista.length === 1 ? "" : "s"}${matchMod !== "todas" ? " de " + matchMod.toUpperCase() : ""}.`;
+  // Semanal/Mensual: el bot solo publica los últimos partidos; si hay más en el periodo, se avisa
+  const per = esTemporada() ? null : periodoPublicado();
+  const aviso = per && per.resumen.partidos > todos.length ? ` Se muestran los últimos ${todos.length} de ${per.resumen.partidos} partidos del periodo.` : "";
+  $("sub").textContent = `Historial de partidos · ${esTemporada() ? "" : DESC_PERIODO[tiempoFiltro] + " · "}${lista.length} partido${lista.length === 1 ? "" : "s"}${matchMod !== "todas" ? " de " + matchMod.toUpperCase() : ""}.${aviso}`;
 }
 
 function render() {
@@ -870,7 +907,7 @@ function render() {
     });
   }
 
-  $("sub").textContent = cargando ? "Cargando…" : `Periodo [${nombrePeriodo().toUpperCase()}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores · ordenado por ${etiquetaOrden(sortKey).toLowerCase()}`;
+  $("sub").textContent = cargando ? "Cargando…" : `Periodo [${nombrePeriodo().toUpperCase()}${esTemporada() ? "" : " · " + DESC_PERIODO[tiempoFiltro]}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores · ordenado por ${etiquetaOrden(sortKey).toLowerCase()}`;
 }
 
 function normalizarDb(json) {
@@ -880,7 +917,7 @@ function normalizarDb(json) {
     return db;
   }
   if (json && typeof json === "object") {
-    return { jugadores: json.jugadores || json, partidaHistorial: json.partidaHistorial || [] };
+    return { jugadores: json.jugadores || json, partidaHistorial: json.partidaHistorial || [], periodos: json.periodos || null };
   }
   return { jugadores: {}, partidaHistorial: [] };
 }
