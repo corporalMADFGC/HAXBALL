@@ -111,6 +111,39 @@ td.name:hover .nm{text-decoration:underline}
 .card-avatar{width:50px;height:50px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;border:2px solid #fff}
 .pes-hexagon-container{display:flex;justify-content:center;align-items:center;margin:8px 0}
 .card-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;font-weight:bold;background:rgba(255,255,255,0.3);padding:8px;border-radius:8px}
+
+/* VENTANA DE PUNTOS POR PARTIDO (estilo Mister) */
+.pl.clicable{cursor:pointer}
+.pl.clicable:hover{background:var(--soft)}
+.pl.clicable.mvp:hover{background:rgba(240,180,41,.3)}
+.pts-box{position:relative;width:min(440px,94vw);max-height:86vh;display:flex;flex-direction:column;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.5);overflow:hidden}
+.pts-box .close-btn{top:10px;right:10px}
+.pts-head{padding:16px 18px 12px;background:linear-gradient(135deg,#0b2a5b,#1e5bb8);color:#fff}
+.pts-head h3{margin:0 40px 2px 0;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.7rem;line-height:1.1;text-transform:uppercase;letter-spacing:.5px}
+.pts-head .per{font-size:.74rem;opacity:.8;text-transform:uppercase;letter-spacing:.6px}
+.pts-resumen{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--soft);text-align:center}
+.pts-resumen b{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.35rem;line-height:1.1}
+.pts-resumen span{font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mut)}
+.pts-leyenda{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:8px 12px 2px;font-size:.7rem;color:var(--mut);font-weight:600}
+.pts-leyenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.pts-lista{overflow-y:auto;padding:6px 12px 14px}
+.pts-fila{display:flex;align-items:center;gap:12px;padding:8px 2px;border-bottom:1px solid var(--line)}
+.pts-fila:last-child{border-bottom:0}
+.pts-fila.out{opacity:.55}
+.pts-info{flex:1;min-width:0}
+.pts-info .l1{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--mut)}
+.pts-info .l2{font-weight:700;font-size:.9rem;margin:2px 0}
+.pts-info .l2 .r{color:var(--tr)}.pts-info .l2 .b{color:var(--tb)}
+.pts-info .l3{display:flex;gap:12px;font-size:.8rem;font-weight:700}
+.pts-info .l3 .cero{opacity:.35}
+.pts-res{font-weight:800;font-size:.7rem;padding:1px 7px;border-radius:5px;color:#fff}
+.pts-res.v{background:var(--green)}.pts-res.d{background:var(--red)}.pts-res.e{background:#64748b}
+.pts-bola{flex:0 0 auto;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem;font-weight:700;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.pts-bola.am{background:#f5c518;color:#2b2200}
+.pts-bola.ve{background:#22a84a}
+.pts-bola.az{background:#1e6fe0}
+.pts-bola.ro{background:#dc2626}
+.pts-bola.na{background:#94a3b8;font-size:1.1rem}
 </style>
 </head>
 <body>
@@ -174,6 +207,23 @@ td.name:hover .nm{text-decoration:underline}
 
       <div class="card-stats-grid" id="card-info"></div>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pts" onclick="cerrarPuntos()">
+  <div class="pts-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="pts-nombre">
+    <button class="close-btn" onclick="cerrarPuntos()" aria-label="Cerrar">✕</button>
+    <div class="pts-head">
+      <h3 id="pts-nombre">JUGADOR</h3>
+      <div class="per" id="pts-periodo"></div>
+    </div>
+    <div class="pts-resumen" id="pts-resumen"></div>
+    <div class="pts-leyenda">
+      <span><i style="background:#f5c518"></i>0 – 4</span>
+      <span><i style="background:#22a84a"></i>5 – 9</span>
+      <span><i style="background:#1e6fe0"></i>10 o más</span>
+    </div>
+    <div class="pts-lista" id="pts-lista"></div>
   </div>
 </div>
 
@@ -530,6 +580,79 @@ function pintarPodio(list) {
   });
 }
 
+// ---------- Ventana de puntos por partido (estilo Mister) ----------
+// Puntos = puntosMVP que calcula el bot (no existen en 1v1 ni si el jugador abandonó).
+// Colores: 0-4 amarillo, 5-9 verde, 10 o más azul (negativos en rojo, como en Mister).
+function claseBolaPuntos(n) {
+  if (n < 0) return "ro";
+  if (n < 5) return "am";
+  if (n < 10) return "ve";
+  return "az";
+}
+
+function cerrarPuntos() { $("modal-pts").classList.remove("active"); }
+
+function abrirPuntosJugador(nombre) {
+  const partidos = partidosPeriodo().filter(p => (p.participantes || []).some(x => x.name === nombre));
+  let total = 0, conPuntos = 0, goles = 0, asist = 0, jugados = 0;
+
+  const lista = $("pts-lista"); lista.textContent = "";
+  partidos.slice().reverse().forEach(p => {       // más reciente primero
+    const x = p.participantes.find(q => q.name === nombre);
+    const gan = ganadorEquipo(p);
+    const tienePts = p.modalidad !== "1v1" && typeof x.puntosMVP === "number" && !x.abandono;
+    const pts = tienePts ? Math.round(x.puntosMVP * 10) / 10 : null;
+
+    if (!x.abandono) {
+      jugados++;
+      goles += (x.goals || 0);
+      asist += (x.assists || 0);
+    }
+    if (pts != null) { total += pts; conPuntos++; }
+
+    const fila = el("div", "pts-fila" + (x.abandono ? " out" : ""));
+    const bola = el("div", "pts-bola " + (pts != null ? claseBolaPuntos(pts) : "na"), pts != null ? fmtPts(pts) : "–");
+    bola.title = pts != null ? "Puntos del partido" : (x.abandono ? "Abandonó: sin puntos" : "En 1v1 no hay puntos");
+
+    const info = el("div", "pts-info");
+    const l1 = el("div", "l1");
+    l1.append(el("span", "badge", (p.modalidad || "N/D").toUpperCase()));
+    l1.append(el("span", null, new Date(p.timestamp).toLocaleString()));
+    if (x.abandono) {
+      l1.append(el("span", null, "· abandonó"));
+    } else if (p.marcador) {
+      const res = gan === 0 ? "e" : (gan === x.team ? "v" : "d");
+      l1.append(el("span", "pts-res " + res, res === "v" ? "VICTORIA" : res === "d" ? "DERROTA" : "EMPATE"));
+    }
+    const l2 = el("div", "l2");
+    if (p.marcador) {
+      l2.append(el("span", "r", "Rojo " + p.marcador.red), document.createTextNode(" - "), el("span", "b", p.marcador.blue + " Azul"));
+    } else {
+      l2.textContent = "Marcador no disponible";
+    }
+    const l3 = el("div", "l3");
+    l3.append(el("span", x.goals ? "" : "cero", `⚽ ${x.goals || 0}`));
+    l3.append(el("span", x.assists ? "" : "cero", `🅰️ ${x.assists || 0}`));
+    if (x.ownGoals) l3.append(el("span", null, `🥅 ${x.ownGoals} pp`));
+    info.append(l1, l2, l3);
+
+    fila.append(bola, info);
+    lista.append(fila);
+  });
+  if (!partidos.length) lista.append(el("div", "empty", "No hay partidos de este jugador en este periodo."));
+
+  $("pts-nombre").textContent = nombre;
+  $("pts-periodo").textContent = nombrePeriodo();
+  const media = conPuntos ? Math.round((total / conPuntos) * 10) / 10 : 0;
+  const res = $("pts-resumen"); res.textContent = "";
+  [[jugados, "Partidos"], [fmtPts(total), "Puntos"], [conPuntos ? fmtPts(media) : "–", "Media"], [goles, "Goles"], [asist, "Asist."]].forEach(([v, t]) => {
+    const d = document.createElement("div"); d.append(el("b", null, v), el("span", null, t)); res.append(d);
+  });
+  lista.scrollTop = 0;
+  $("modal-pts").classList.add("active");
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { cerrarPuntos(); $("modal").classList.remove("active"); } });
+
 function pintarMatches() {
   const filtroTexto = $("q").value.toLowerCase().trim();
   const todos = partidosPeriodo();
@@ -588,7 +711,9 @@ function pintarMatches() {
       (partido.participantes || []).filter(x => x.team === t)
         .sort((a, b) => (b.puntosMVP || 0) - (a.puntosMVP || 0) || (b.goals || 0) - (a.goals || 0))
         .forEach(x => {
-          const row = el("div", "pl" + (x === mvp ? " mvp" : "") + (x.abandono ? " out" : ""));
+          const row = el("div", "pl clicable" + (x === mvp ? " mvp" : "") + (x.abandono ? " out" : ""));
+          row.title = "Ver puntos por partido de " + x.name;
+          row.addEventListener("click", () => abrirPuntosJugador(x.name));
           row.append(el("div", "pn", (x === mvp ? "⭐ " : "") + x.name + (x.abandono ? " (abandonó)" : "")));
           const mostrarPts = partido.modalidad !== "1v1" && typeof x.puntosMVP === "number" && !x.abandono;
           row.append(el("div", "pp", mostrarPts ? fmtPts(x.puntosMVP) + " pts" : ""));
