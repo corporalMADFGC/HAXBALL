@@ -251,7 +251,7 @@ td.name:hover .nm{text-decoration:underline}
 
 <script>
 const $ = (id) => document.getElementById(id);
-const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "5v5", "6v6", "7v7", "full"];   // "partidos" es un botón de la fila superior (tab === "partidos")
+const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "full"];   // "partidos" es un botón de la fila superior (tab === "partidos")
 
 let dbGlobal = { jugadores: {}, partidaHistorial: [] };
 // "temp1" = temporada en curso (se llama así por compatibilidad; el número real es temporadaNum).
@@ -385,7 +385,7 @@ async function cargarPartidos(total) {
   if (partidosCache && partidosCache.temporada === temporadaNum && partidosCache.lista.length === total) return;
   try {
     const r = await fetch("partidos.json?t=" + Date.now());
-    if (r.ok) { const j = await r.json(); partidosCache = { temporada: +j.temporada, lista: j.partidos || [] }; }
+    if (r.ok) { const j = await r.json(); partidosCache = { temporada: +j.temporada, lista: (j.partidos || []).map(p => (p && MODS_FULL.includes(p.modalidad) ? { ...p, modalidad: "full" } : p)) }; }
   } catch (e) { console.warn("No se pudo cargar partidos.json:", e); }
 }
 function aplicarPartidos() {
@@ -948,7 +948,34 @@ function render() {
   $("sub").textContent = cargando ? "Cargando…" : `Periodo [${nombrePeriodo().toUpperCase()}${esTemporada() ? "" : " · " + DESC_PERIODO[tiempoFiltro]}] · Modo [${tab.toUpperCase()}] · ${list.length} jugadores · ordenado por ${etiquetaOrden(sortKey).toLowerCase()}`;
 }
 
+// 5v5…10v10 son una sola modalidad ("full"). Unifica datos antiguos (temporadas cerradas, partidos.json) que aún traigan 5v5/6v6/7v7…
+const MODS_FULL = ["5v5", "6v6", "7v7", "8v8", "9v9", "10v10"];
+const aFull = (m) => (MODS_FULL.includes(m) ? "full" : m);
+function unificarFull(db) {
+  Object.values(db.jugadores || {}).forEach((j) => {
+    if (!j || !j.modalidades) return;
+    const viejas = Object.keys(j.modalidades).filter((m) => MODS_FULL.includes(m));
+    if (!viejas.length) return;
+    const partes = viejas.map((m) => j.modalidades[m]).concat(j.modalidades.full ? [j.modalidades.full] : []).filter(Boolean);
+    const u = {}; let sumaElo = 0, pj = 0;
+    partes.forEach((m) => {
+      Object.entries(m).forEach(([c, v]) => { if (typeof v === "number" && c !== "elo" && c !== "streak" && c !== "bestStreak") u[c] = (u[c] || 0) + v; });
+      const n = m.matches || 0; sumaElo += (m.elo || 1000) * n; pj += n;
+      u.streak = Math.max(u.streak || 0, m.streak || 0);
+      u.bestStreak = Math.max(u.bestStreak || 0, m.bestStreak || 0);
+    });
+    u.elo = pj > 0 ? Math.round(sumaElo / pj) : 1000;
+    viejas.forEach((m) => delete j.modalidades[m]);
+    j.modalidades.full = u;
+  });
+  (db.partidaHistorial || []).forEach((h) => { if (h && h.modalidad) h.modalidad = aFull(h.modalidad); });
+  return db;
+}
+
 function normalizarDb(json) {
+  return unificarFull(normalizarDbBase(json));
+}
+function normalizarDbBase(json) {
   if (Array.isArray(json)) {
     const db = { jugadores: {}, partidaHistorial: [] };
     json.forEach(j => { if (j && j.name) db.jugadores[j.auth || j.name] = j; });
