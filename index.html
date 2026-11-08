@@ -171,6 +171,7 @@ td.name:hover .nm{text-decoration:underline}
     <h1>&lt;&lt;&lt;F7-RANKING ROOM&gt;&gt;&gt;</h1>
     <p class="sub" id="sub">Cargando…</p>
     <div class="countdown" id="countdown"></div>
+    <div class="countdown fin" id="campeon" hidden></div>
     <div class="kpis" id="kpis"></div>
   </header>
 
@@ -267,7 +268,7 @@ const dbArchivo = {};          // temporadas cerradas: { 1: { jugadores, partida
 const archivoIntentado = {};
 
 // Ordenación del ranking
-let sortKey = "elo";
+let sortKey = "puntos";      // el total de puntos decide el ganador de la temporada
 let sortDir = -1;          // -1 = mayor a menor, 1 = menor a mayor
 let minPJ = 0;
 // Vista de partidos
@@ -276,14 +277,14 @@ let matchLimit = 20;
 
 // Columnas de la tabla (k = campo por el que se puede ordenar)
 const COLS = [
-  { k: "ovr", t: "OVR" }, { k: "matches", t: "PJ" }, { k: "wins", t: "V" }, { k: "winPct", t: "% V" },
+  { k: "puntos", t: "PTS" }, { k: "ovr", t: "OVR" }, { k: "matches", t: "PJ" }, { k: "wins", t: "V" }, { k: "winPct", t: "% V" },
   { k: "goals", t: "Goles" }, { k: "assists", t: "Asist." }, { k: "ga", t: "G+A" },
   { k: "saves", t: "Paradas" }, { k: "recoveries", t: "Robos" }, { k: "passPct", t: "Pases (%)" },
   { k: "mvp", t: "MVP" }, { k: "elo", t: "ELO" }
 ];
 // Opciones del selector (las columnas + algunas extra)
 const SORT_OPTS = [
-  { k: "elo", t: "ELO" }, { k: "ovr", t: "OVR (media)" }, { k: "matches", t: "Partidos jugados" },
+  { k: "puntos", t: "Puntos totales" }, { k: "elo", t: "ELO" }, { k: "ovr", t: "OVR (media)" }, { k: "matches", t: "Partidos jugados" },
   { k: "wins", t: "Victorias" }, { k: "winPct", t: "% de victorias" },
   { k: "goals", t: "Goles" }, { k: "assists", t: "Asistencias" }, { k: "ga", t: "Goles + Asistencias" },
   { k: "gpm", t: "Goles por partido" }, { k: "mvp", t: "MVP" },
@@ -435,9 +436,10 @@ function procesarDatosFiltrados() {
         mapaJugadores[k] = { name: p.name, avatar: p.name.substring(0, 2).toUpperCase(), modalidades: {} };
       }
       if (!mapaJugadores[k].modalidades[mod]) {
-        mapaJugadores[k].modalidades[mod] = { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, elo: 1000, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0 };
+        mapaJugadores[k].modalidades[mod] = { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, elo: 1000, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, puntos: 0 };
       }
       const m = mapaJugadores[k].modalidades[mod];
+      if (typeof p.puntosMVP === "number") m.puntos += p.puntosMVP;
       m.matches++;
       m.goals += (p.goals || 0);
       m.assists += (p.assists || 0);
@@ -519,7 +521,7 @@ function obtenerVistaJugador(p, modo) {
   let r = { 
     matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, 
     saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, 
-    recoveries: 0, mvp: 0, streak: 0, bestStreak: 0, elo: 1000 
+    recoveries: 0, mvp: 0, puntos: 0, streak: 0, bestStreak: 0, elo: 1000 
   };
   let totalElo = 0, countElo = 0, maxStreak = 0;
 
@@ -537,12 +539,14 @@ function obtenerVistaJugador(p, modo) {
     r.passesCompleted += (m.passesCompleted || 0);
     r.recoveries += (m.recoveries || 0);
     r.mvp += (m.mvp || 0);
+    r.puntos += (m.puntos || 0);
     if ((m.bestStreak || 0) > maxStreak) maxStreak = m.bestStreak;
     if (m.elo != null) { totalElo += m.elo; countElo++; }
   });
 
   r.elo = countElo > 0 ? Math.round(totalElo / countElo) : 1000;
   r.bestStreak = maxStreak;
+  r.puntos = Math.round(r.puntos * 100) / 100;
   if (!r.matches && !r.goals && !r.wins) return null;
   r.name = p.name;
   r.avatar = p.avatar || p.name.substring(0, 2).toUpperCase();
@@ -627,6 +631,7 @@ function abrirCarta(p) {
     <div>🔒 Porterías 0: ${p.cleanSheets}</div>
     <div>👟 Pases: ${passPct}%</div>
     <div>⭐ MVPs: ${p.mvp}</div>
+    <div>🏅 Puntos: ${fmtPts(p.puntos || 0)}</div>
   `;
   $("modal").classList.add("active");
 }
@@ -634,6 +639,7 @@ function abrirCarta(p) {
 function valorOrden(v, k) { const x = v[k]; return (x == null ? -1 : x); }
 function etiquetaOrden(k) { const o = SORT_OPTS.find(o => o.k === k); return o ? o.t : k; }
 function fmtValor(v, k) {
+  if (k === "puntos") return fmtPts(v.puntos);
   if (k === "passPct") return v.passPct < 0 ? "-" : v.passPct + "%";
   if (k === "winPct") return v.winPct + "%";
   return v[k];
@@ -854,6 +860,21 @@ function pintarMatches() {
   $("sub").textContent = `Historial de partidos · ${esTemporada() ? "" : DESC_PERIODO[tiempoFiltro] + " · "}${lista.length} partido${lista.length === 1 ? "" : "s"}${matchMod !== "todas" ? " de " + matchMod.toUpperCase() : ""}.${aviso}`;
 }
 
+// El ganador de la temporada es quien tiene más puntos en total (todas las modalidades), sea cual sea el orden o el modo elegido.
+function pintarCampeon(datos) {
+  const c = $("campeon");
+  if (!esTemporada()) { c.hidden = true; return; }
+  let mejor = null;
+  datos.forEach((p) => {
+    const v = obtenerVistaJugador(p, "total");
+    if (v && v.puntos > 0 && (!mejor || v.puntos > mejor.puntos || (v.puntos === mejor.puntos && v.elo > mejor.elo))) mejor = v;
+  });
+  if (!mejor) { c.hidden = true; return; }
+  const cerrada = tiempoFiltro.startsWith("arch:") || new Date(temporadaFin).getTime() <= Date.now();
+  c.textContent = `${cerrada ? "🏆 Campeón" : "👑 Líder"} de la Temporada ${nombrePeriodo().replace("Temporada ", "")}: ${mejor.name} · ${fmtPts(mejor.puntos)} pts`;
+  c.hidden = false;
+}
+
 function render() {
   document.title = "F7 Ranking Room - Temporada " + temporadaNum;
   pintarTiempo();
@@ -875,6 +896,7 @@ function render() {
   $("sortDir").textContent = sortDir === -1 ? "↓ Mayor a menor" : "↑ Menor a mayor";
 
   const datosJugadores = procesarDatosFiltrados();
+  pintarCampeon(datosJugadores);
 
   if (esPartidos) {
     pintarKpis(datosJugadores.length);
