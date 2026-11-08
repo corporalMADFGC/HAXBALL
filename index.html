@@ -118,6 +118,10 @@ td.name:hover .nm{text-decoration:underline}
 .pes-hexagon-container{display:flex;justify-content:center;align-items:center;margin:8px 0}
 .card-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;font-weight:bold;background:rgba(255,255,255,0.3);padding:8px;border-radius:8px}
 
+.vtabs{display:flex;gap:6px;justify-content:center;margin:0 0 10px}
+.vtabs button{font-size:.8rem;font-weight:700;padding:5px 16px;border:1px solid rgba(255,255,255,.45);background:rgba(0,0,0,.35);color:#fff;border-radius:999px;cursor:pointer}
+.vtabs button[aria-selected=true]{background:#f0b429;border-color:#f0b429;color:#111}
+.pts-head .vtabs{justify-content:flex-start;margin:10px 0 0}
 /* VENTANA DE PUNTOS POR PARTIDO (estilo Mister) */
 .pl.clicable{cursor:pointer}
 .pl.clicable:hover{background:var(--soft)}
@@ -205,6 +209,7 @@ td.name:hover .nm{text-decoration:underline}
 <div class="modal-overlay" id="modal" onclick="$('modal').classList.remove('active')">
   <div style="position:relative" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
+    <div class="vtabs"><button type="button" aria-selected="true">💎 Perfil</button><button type="button" aria-selected="false" onclick="verPuntos()">📊 Puntos</button></div>
     <div class="fut-card-gold">
       <div class="card-header">
         <div>
@@ -231,6 +236,7 @@ td.name:hover .nm{text-decoration:underline}
     <div class="pts-head">
       <h3 id="pts-nombre">JUGADOR</h3>
       <div class="per" id="pts-periodo"></div>
+      <div class="vtabs"><button type="button" aria-selected="false" onclick="verPerfil()">💎 Perfil</button><button type="button" aria-selected="true">📊 Puntos</button></div>
     </div>
     <div class="pts-resumen" id="pts-resumen"></div>
     <div class="pts-leyenda">
@@ -371,6 +377,24 @@ const diaClave = (ms) => FMT_DIA.format(new Date(ms));          // "2026-11-07"
 
 // Los periodos cortos los calcula el bot y los publica en stats.json → periodos.{diario,semanal,mensual}
 // ({ jugadores, resumen:{partidos,goles,ultimo} }). El historial de partidos solo trae los últimos que publica el bot.
+// Detalle completo de la temporada: partidos.json (el bot lo publica aparte). Solo se descarga cuando se abre Partidos
+// o la gráfica de puntos, y después se mantiene al día mientras cambie "partidosTotal" en stats.json.
+let partidosCache = null, quierePartidos = false;
+async function cargarPartidos(total) {
+  if (!quierePartidos || total == null) return;
+  if (partidosCache && partidosCache.temporada === temporadaNum && partidosCache.lista.length === total) return;
+  try {
+    const r = await fetch("partidos.json?t=" + Date.now());
+    if (r.ok) { const j = await r.json(); partidosCache = { temporada: +j.temporada, lista: j.partidos || [] }; }
+  } catch (e) { console.warn("No se pudo cargar partidos.json:", e); }
+}
+function aplicarPartidos() {
+  if (partidosCache && partidosCache.temporada === temporadaNum && partidosCache.lista.length >= (dbGlobal.partidaHistorial || []).length) {
+    dbGlobal.partidaHistorial = partidosCache.lista;
+  }
+}
+function pedirPartidos() { if (!quierePartidos) { quierePartidos = true; load().then(() => { if ($("modal-pts").classList.contains("active") && nombreActual) abrirPuntosJugador(nombreActual); }); } }
+
 function periodoPublicado() {
   const per = dbGlobal.periodos && dbGlobal.periodos[tiempoFiltro];
   return per && per.jugadores ? per : null;
@@ -569,7 +593,7 @@ function pintarKpis(listaJugadores) {
   const k = $("kpis"); k.textContent = "";
   const items = [
     [listaJugadores, "Jugadores"],
-    [nPartidos, esTemporada() ? "Partidos recientes" : "Partidos"],
+    [nPartidos, "Partidos"],
     [goles, "Goles en esos partidos"],
     [ultimo ? new Date(ultimo).toLocaleDateString() : "-", "Último partido"]
   ];
@@ -578,7 +602,17 @@ function pintarKpis(listaJugadores) {
   });
 }
 
+let nombreActual = null;
+function vistaPorNombre(nombre) {
+  const j = procesarDatosFiltrados().find(x => x.name === nombre);
+  const v = j ? obtenerVistaJugador(j, "total") : null;
+  return v ? derivar(v) : null;
+}
+function verPerfil() { const v = vistaPorNombre(nombreActual); if (!v) return; cerrarPuntos(); abrirCarta(v); }
+function verPuntos() { $("modal").classList.remove("active"); abrirPuntosJugador(nombreActual); }
+
 function abrirCarta(p) {
+  nombreActual = p.name;
   const passPct = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) : 0;
   $("card-name").textContent = p.name;
   $("card-ovr").textContent = p.ovr;
@@ -637,7 +671,9 @@ function claseBolaPuntos(n) {
 function cerrarPuntos() { $("modal-pts").classList.remove("active"); }
 
 function abrirPuntosJugador(nombre) {
-  const partidos = partidosPeriodo().filter(p => (p.participantes || []).some(x => x.name === nombre));   // orden cronológico
+  pedirPartidos();
+  nombreActual = nombre;
+  const partidos = partidosPeriodo().filter(p => p.modalidad !== "1v1" && (p.participantes || []).some(x => x.name === nombre));   // los 1v1 no puntúan   // orden cronológico
   const datos = partidos.map((p, i) => {
     const x = p.participantes.find(q => q.name === nombre);
     const tienePts = p.modalidad !== "1v1" && typeof x.puntosMVP === "number" && !x.abandono;
@@ -724,6 +760,7 @@ function abrirPuntosJugador(nombre) {
   if (datos.length) seleccionar(datos[datos.length - 1], cols[cols.length - 1]);
   else { detalle.textContent = ""; detalle.append(el("span", "f", "No hay partidos de este jugador en este periodo.")); }
 
+  $("modal").classList.remove("active");
   $("modal-pts").classList.add("active");
   const wrap = $("pts-chart-wrap"); wrap.scrollLeft = wrap.scrollWidth;     // empieza viendo el último partido
 }
@@ -823,6 +860,7 @@ function render() {
   pintarCuenta();
   pintarTabs();
   const esPartidos = tab === "partidos";
+  if (esPartidos) pedirPartidos();
   $("sort-ctl").style.display = esPartidos ? "none" : "flex";
   $("wrap-ranking").hidden = esPartidos;
   $("podium").hidden = esPartidos;
@@ -917,7 +955,7 @@ function normalizarDb(json) {
     return db;
   }
   if (json && typeof json === "object") {
-    return { jugadores: json.jugadores || json, partidaHistorial: json.partidaHistorial || [], periodos: json.periodos || null };
+    return { jugadores: json.jugadores || json, partidaHistorial: json.partidaHistorial || [], periodos: json.periodos || null, total: json.partidosTotal != null ? +json.partidosTotal : null };
   }
   return { jugadores: {}, partidaHistorial: [] };
 }
@@ -954,6 +992,8 @@ async function load() {
     console.error("Error al cargar stats.json:", e);
   }
   cargando = false;
+  await cargarPartidos(dbGlobal.total);
+  aplicarPartidos();
   await cargarArchivos();
   render();
 }
