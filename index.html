@@ -60,7 +60,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(1.8r
 
 /* TABLA */
 .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
-table{width:100%;border-collapse:collapse;min-width:980px;font-size:.84rem}
+table{width:100%;border-collapse:collapse;min-width:1030px;font-size:.84rem}
 th,td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-weight:700;color:var(--mut);font-size:.8rem;background:var(--soft);user-select:none}
 th[data-k]{cursor:pointer}
@@ -277,7 +277,7 @@ let matchLimit = 20;
 
 // Columnas de la tabla (k = campo por el que se puede ordenar)
 const COLS = [
-  { k: "puntos", t: "PTS" }, { k: "ovr", t: "OVR" }, { k: "matches", t: "PJ" }, { k: "wins", t: "V" }, { k: "winPct", t: "% V" },
+  { k: "puntos", t: "PTS" }, { k: "ovr", t: "OVR" }, { k: "matches", t: "PJ" }, { k: "wins", t: "V" }, { k: "bestStreak", t: "Racha" }, { k: "winPct", t: "% V" },
   { k: "goals", t: "Goles" }, { k: "assists", t: "Asist." }, { k: "ga", t: "G+A" },
   { k: "saves", t: "Paradas" }, { k: "recoveries", t: "Robos" }, { k: "passPct", t: "Pases (%)" },
   { k: "mvp", t: "MVP" }, { k: "elo", t: "ELO" }
@@ -285,7 +285,7 @@ const COLS = [
 // Opciones del selector (las columnas + algunas extra)
 const SORT_OPTS = [
   { k: "puntos", t: "Puntos totales" }, { k: "elo", t: "ELO" }, { k: "ovr", t: "OVR (media)" }, { k: "matches", t: "Partidos jugados" },
-  { k: "wins", t: "Victorias" }, { k: "winPct", t: "% de victorias" },
+  { k: "wins", t: "Victorias" }, { k: "bestStreak", t: "Máxima racha" }, { k: "winPct", t: "% de victorias" },
   { k: "goals", t: "Goles" }, { k: "assists", t: "Asistencias" }, { k: "ga", t: "Goles + Asistencias" },
   { k: "gpm", t: "Goles por partido" }, { k: "mvp", t: "MVP" },
   { k: "saves", t: "Paradas" }, { k: "cleanSheets", t: "Porterías a cero" },
@@ -425,7 +425,7 @@ function procesarDatosFiltrados() {
   if (historial.length === 0) return Object.values(jugOriginales);
 
   const mapaJugadores = {};
-  partidosPeriodo().forEach(partido => {
+  [...partidosPeriodo()].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)).forEach(partido => {
     const mod = partido.modalidad;
     const gan = ganadorEquipo(partido);
     const mvp = mvpDelPartido(partido);
@@ -436,7 +436,7 @@ function procesarDatosFiltrados() {
         mapaJugadores[k] = { name: p.name, avatar: p.name.substring(0, 2).toUpperCase(), modalidades: {} };
       }
       if (!mapaJugadores[k].modalidades[mod]) {
-        mapaJugadores[k].modalidades[mod] = { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, elo: 1000, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, puntos: 0 };
+        mapaJugadores[k].modalidades[mod] = { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, elo: 1000, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, puntos: 0, streak: 0, bestStreak: 0 };
       }
       const m = mapaJugadores[k].modalidades[mod];
       if (typeof p.puntosMVP === "number") m.puntos += p.puntosMVP;
@@ -450,7 +450,7 @@ function procesarDatosFiltrados() {
       m.passesCompleted += (p.passesCompleted || 0);
       if (p.cleanSheet) m.cleanSheets++;
       if (mvp === p) m.mvp++;
-      if (gan && p.team === gan) { m.wins++; m.elo += 25; }
+      if (gan && p.team === gan) { m.wins++; m.elo += 25; m.streak++; if (m.streak > m.bestStreak) m.bestStreak = m.streak; } else { m.streak = 0; }
     });
   });
 
@@ -624,7 +624,7 @@ function abrirCarta(p) {
   $("pes-svg").innerHTML = generarSVGRomboPES(p.pes);
   $("card-info").innerHTML = `
     <div>🏆 ELO: ${p.elo}</div>
-    <div>🎮 PJ: ${p.matches} | 🥇 V: ${p.wins}</div>
+    <div>🎮 PJ: ${p.matches} | 🥇 V: ${p.wins} | 🔥 Racha: ${p.bestStreak || 0}</div>
     <div>⚽ Goles: ${p.goals}</div>
     <div>🅰️ Asistencias: ${p.assists}</div>
     <div>🧤 Paradas: ${p.saves}</div>
