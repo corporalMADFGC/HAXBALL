@@ -224,6 +224,7 @@ td.name:hover .nm{text-decoration:underline}
       <!-- Hexágono estilo PES 6 -->
       <div class="pes-hexagon-container">
         <svg width="170" height="150" viewBox="0 0 200 180" id="pes-svg"></svg>
+        <div style="font-size:.62rem;text-align:center;opacity:.7;margin-top:2px">Atributos: últimos 10 partidos (FIS: todos)</div>
       </div>
 
       <div class="card-stats-grid" id="card-info"></div>
@@ -380,7 +381,7 @@ const diaClave = (ms) => FMT_DIA.format(new Date(ms));          // "2026-11-07"
 // ({ jugadores, resumen:{partidos,goles,ultimo} }). El historial de partidos solo trae los últimos que publica el bot.
 // Detalle completo de la temporada: partidos.json (el bot lo publica aparte). Solo se descarga cuando se abre Partidos
 // o la gráfica de puntos, y después se mantiene al día mientras cambie "partidosTotal" en stats.json.
-let partidosCache = null, quierePartidos = false;
+let partidosCache = null, quierePartidos = true;   // se cargan siempre: la carta usa los últimos 10 partidos de cada jugador
 async function cargarPartidos(total) {
   if (!quierePartidos || total == null) return;
   if (partidosCache && partidosCache.temporada === temporadaNum && partidosCache.lista.length === total) return;
@@ -458,36 +459,64 @@ function procesarDatosFiltrados() {
   return Object.values(mapaJugadores);
 }
 
-function calcularAtributosPES(r) {
-  const pj = Math.max(1, r.matches);
-  const att = Math.min(99, Math.round(40 + ((r.goals * 1.5 + r.assists) / pj) * 25));
-  // DEF: acciones defensivas por partido con curva de saturación (rendimientos decrecientes).
-  // Antes era lineal (x20): con ~3 robos por partido ya se llegaba al tope de 99 y todos salían iguales.
-  // Con DEF_K = 14: 5 acc/partido ≈ 62, 10 ≈ 71, 20 ≈ 85, 35 ≈ 94.
-  // Si todos salen altos, sube DEF_K; si salen bajos, bájalo.
-  const DEF_K = 14;
-  const defAcciones = (r.recoveries + r.saves * 1.2 + r.cleanSheets * 3) / pj;
-  const def = Math.min(99, Math.max(40, Math.round(40 + 59 * (1 - Math.exp(-defAcciones / DEF_K)))));
-  // PAS: combina precisión de pase y volumen de pases completados por partido.
-  // Si no hay pases registrados, parte de 40 y no inventa un porcentaje del 50%.
-  const passPct = r.passesTotal > 0 ? (r.passesCompleted / r.passesTotal) : 0;
-  const passesPerMatch = r.passesCompleted / pj;
-  const pas = Math.min(99, Math.max(40, Math.round(40 + passPct * 40 + Math.min(19, passesPerMatch * 5))));
-  const mvpAttr = Math.min(99, Math.max(40, Math.round(40 + (r.mvp / pj) * 50 + (r.bestStreak || 0) * 3)));
-  // EXP progresa de forma gradual: evita llegar a 99 con apenas unos 20 partidos.
-  const exp = Math.min(99, Math.round(40 + 12 * Math.log(pj + 1)));
-  const men = Math.min(99, Math.max(40, Math.round(40 + (r.elo - 800) / 10)));
-  const eloContrib = Math.max(40, 50 + (r.elo - 1000) / 15);
-  const winRateContrib = ((r.wins / pj) * 30) + 50;
-  const outputContrib = Math.min(99, 40 + ((r.goals + r.assists) / pj) * 25);
-  const ovr = Math.min(99, Math.round((eloContrib * 0.4) + (winRateContrib * 0.3) + (outputContrib * 0.3)));
-  return { att, def, pas, mvpAttr, exp, men, ovr };
+// ---------- Carta FIFA / rombo: atributos sobre los ÚLTIMOS 10 PARTIDOS (menos FIS, que usa todos los partidos) ----------
+// Sin decimales (siempre se redondea hacia abajo) y con tope de 99. Base de cada atributo = 50.
+//  TIR: +10 cada 3 goles (15 goles = 99) · +1 cada 3 asistencias
+//  DEF: +10 cada 30 robos · +1 cada 3 paradas (portero o no)
+//  PAS: +10 cada 3 asistencias · +1 cada 5 pases completados
+//  RIT: +5 por MVP (10 MVP = 99) · +1 por cada 2 partidos de racha ganadora (máx. +5, racha de 10)
+//  FIS: 10 partidos = 50, 500 partidos = 99 (crece linealmente: +0,1 por partido)
+//  REG: +10 cada 3 autopases
+//  OVR: media de los seis atributos
+const TOPE_ATR = 99, BASE_ATR = 50, N_ULTIMOS = 10;
+let indiceCache = { ref: null, len: -1, mapa: null };
+function indicePartidosPorJugador() {
+  const hist = dbActiva().partidaHistorial || [];
+  if (indiceCache.ref === hist && indiceCache.len === hist.length) return indiceCache.mapa;
+  const mapa = new Map();
+  hist.slice().sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)).forEach(p => {
+    const mvp = mvpDelPartido(p), gan = ganadorEquipo(p);
+    (p.participantes || []).forEach(x => {
+      if (!x || x.abandono) return;
+      if (!mapa.has(x.name)) mapa.set(x.name, []);
+      mapa.get(x.name).push({ mod: p.modalidad, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+    });
+  });
+  indiceCache = { ref: hist, len: hist.length, mapa };
+  return mapa;
+}
+function ultimosPartidos(nombre, modo) {
+  let l = indicePartidosPorJugador().get(nombre) || [];
+  if (modo && modo !== "total") l = l.filter(e => e.mod === modo);
+  return l.slice(-N_ULTIMOS);
+}
+const topar = (v) => Math.min(TOPE_ATR, Math.floor(v + 1e-9));
+
+function calcularAtributosPES(r, nombre, modo) {
+  const u = ultimosPartidos(nombre, modo);
+  let goles = 0, asis = 0, robos = 0, paradas = 0, pases = 0, autop = 0, mvp = 0, racha = 0, mejorRacha = 0;
+  u.forEach(e => {
+    goles += e.x.goals || 0; asis += e.x.assists || 0; robos += e.x.recoveries || 0; paradas += e.x.saves || 0;
+    pases += e.x.passesCompleted || 0; autop += e.x.autopases || 0;
+    if (e.esMvp) mvp++;
+    racha = e.gano ? racha + 1 : 0;
+    if (racha > mejorRacha) mejorRacha = racha;
+  });
+  const tir = topar(BASE_ATR + (goles * 10) / 3 + Math.floor(asis / 3));
+  const def = topar(BASE_ATR + (robos * 10) / 30 + Math.floor(paradas / 3));
+  const pas = topar(BASE_ATR + (asis * 10) / 3 + Math.floor(pases / 5));
+  const rit = topar(BASE_ATR + mvp * 5 + Math.min(5, Math.floor(mejorRacha / 2)));
+  const pj = r.matches || 0;
+  const fis = topar(BASE_ATR + Math.max(0, pj - 10) * 49 / 490);
+  const reg = topar(BASE_ATR + (autop * 10) / 3);
+  const ovr = topar((tir + pas + rit + def + fis + reg) / 6);
+  return { tir, pas, rit, def, fis, reg, ovr };
 }
 
 function generarSVGRomboPES(stats) {
   const cx = 100, cy = 90, r = 65;
-  const labels = ["ATT", "PAS", "MVP", "DEF", "EXP", "MEN"];
-  const vals = [stats.att, stats.pas, stats.mvpAttr, stats.def, stats.exp, stats.men];
+  const labels = ["TIR", "PAS", "RIT", "DEF", "FIS", "REG"];
+  const vals = [stats.tir, stats.pas, stats.rit, stats.def, stats.fis, stats.reg];
   
   let gridLines = "";
   for (let level = 0.25; level <= 1; level += 0.25) {
@@ -553,7 +582,7 @@ function obtenerVistaJugador(p, modo) {
   r.name = p.name;
   r.avatar = p.avatar || p.name.substring(0, 2).toUpperCase();
   
-  const calc = calcularAtributosPES(r);
+  const calc = calcularAtributosPES(r, p.name, modo);
   r.pes = calc;
   r.ovr = calc.ovr;
   return r;
@@ -621,7 +650,7 @@ function vistaPorNombre(nombre) {
   const r = { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0,
               recoveries: 0, mvp: 0, puntos: 0, autopases: 0, streak: 0, bestStreak: 0, elo: 1000,
               name: nombre, avatar: String(nombre).substring(0, 2).toUpperCase() };
-  const calc = calcularAtributosPES(r);
+  const calc = calcularAtributosPES(r, nombre, "total");
   r.pes = calc; r.ovr = calc.ovr;
   return derivar(r);
 }
