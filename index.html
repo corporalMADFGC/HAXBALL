@@ -489,7 +489,7 @@ function procesarDatosFiltrados() {
 // ---------- Carta FIFA / rombo: atributos sobre los ÚLTIMOS 10 PARTIDOS (menos FIS, que usa todos los partidos) ----------
 // Sin decimales (siempre se redondea hacia abajo) y con tope de 99. Base de cada atributo = 50.
 //  TIR: +10 cada 3 goles (15 goles = 99) · +1 cada 3 asistencias
-//  DEF: +10 cada 30 robos · +1 cada 3 paradas (portero o no)
+//  DEF: +10 cada 3 paradas (portero o no) · +1 cada 30 robos
 //  PAS: +10 cada 3 asistencias · +1 cada 5 pases completados
 //  RIT: +5 por MVP (10 MVP = 99) · +1 por cada 2 partidos de racha ganadora (máx. +5, racha de 10)
 //  FIS: 10 partidos = 50, 500 partidos = 99 (crece linealmente: +0,1 por partido)
@@ -530,7 +530,7 @@ function calcularAtributosPES(r, nombre, modo) {
     if (racha > mejorRacha) mejorRacha = racha;
   });
   const tir = topar(BASE_ATR + (goles * 10) / 3 + Math.floor(asis / 3));
-  const def = topar(BASE_ATR + (robos * 10) / 30 + Math.floor(paradas / 3));
+  const def = topar(BASE_ATR + (paradas * 10) / 3 + Math.floor(robos / 30));
   const pas = topar(BASE_ATR + (asis * 10) / 3 + Math.floor(pases / 5));
   const rit = topar(BASE_ATR + mvp * 5 + Math.min(5, Math.floor(mejorRacha / 2)));
   const pj = r.matches || 0;
