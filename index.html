@@ -136,23 +136,23 @@ td.name:hover .nm{text-decoration:underline}
 .pts-resumen span{font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mut)}
 .pts-leyenda{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:10px 12px 0;font-size:.7rem;color:var(--mut);font-weight:600}
 .pts-leyenda i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
-.pts-chart-wrap{overflow:hidden;padding:10px 8px 4px}
-.pts-chart{display:flex;gap:2px;align-items:flex-start;width:100%}
-.pts-col{flex:1 1 0;min-width:0;max-width:44px;display:flex;flex-direction:column;align-items:center;cursor:pointer;border-radius:8px;padding:0 1px 4px;outline:none}
+.pts-chart-wrap{overflow-x:auto;overflow-y:hidden;padding:8px 12px 6px}
+.pts-chart{display:flex;gap:8px;align-items:flex-start;width:max-content;margin:0 auto}
+.pts-col{width:44px;display:flex;flex-direction:column;align-items:center;cursor:pointer;border-radius:10px;padding:0 2px 6px;outline:none}
 .pts-col:hover,.pts-col:focus-visible{background:var(--soft)}
 .pts-col.sel{background:var(--soft);box-shadow:inset 0 0 0 2px var(--line)}
-.pts-zona{height:150px;width:100%;display:flex;align-items:flex-end;justify-content:center}
-.pts-barra{position:relative;width:76%;max-width:30px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 45%,transparent),color-mix(in srgb,var(--c) 4%,transparent))}
+.pts-zona{height:140px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.pts-barra{position:relative;width:32px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 45%,transparent),color-mix(in srgb,var(--c) 4%,transparent))}
 .pts-barra .bd{position:absolute;top:0;left:0;right:0;padding:3px 0;border-radius:7px;background:var(--c);color:#fff;font-weight:800;font-size:.85rem;line-height:1.15;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.pts-sinpts{width:100%;padding-bottom:6px;text-align:center;font-size:1.1rem;color:var(--mut)}
+.pts-sinpts{width:32px;padding-bottom:6px;text-align:center;font-size:1.1rem;color:var(--mut)}
 .am{--c:#f5c518}.am .bd{color:#2b2200}
 .ve{--c:#22a84a}
 .az{--c:#1e6fe0}
 .ro{--c:#dc2626}
-.pts-ico{height:60px;display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:4px;font-size:.75rem;line-height:1}
+.pts-ico{height:60px;display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:6px;font-size:.85rem;line-height:1}
 .pts-ico small{font-size:.65rem;font-weight:800;color:var(--mut)}
-.pts-lbl{font-weight:800;font-size:.68rem;white-space:nowrap;min-height:1em;color:var(--mut)}
-.pts-mod{font-size:.5rem;color:var(--mut);opacity:.8;text-transform:uppercase}
+.pts-lbl{font-weight:800;font-size:.74rem;color:var(--mut)}
+.pts-mod{font-size:.58rem;color:var(--mut);opacity:.8;text-transform:uppercase}
 .pts-detalle{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 16px 12px;border-top:1px solid var(--line);font-size:.85rem;min-height:58px}
 .pts-detalle .f{color:var(--mut);font-size:.78rem}
 .pts-detalle .m{font-weight:700}
@@ -163,14 +163,6 @@ td.name:hover .nm{text-decoration:underline}
 .pts-pill{font-weight:800;font-size:.8rem;padding:2px 10px;border-radius:999px;background:var(--c);color:#fff}
 .pts-pill.am{color:#2b2200}
 .pts-pill.na{background:#94a3b8}
-/* densidad automática: con muchos partidos las columnas se estrechan y se quitan detalles para que quepa todo sin barra */
-.pts-chart.m .pts-barra .bd{font-size:.6rem;padding:2px 0}
-.pts-chart.m .pts-ico{font-size:.62rem}
-.pts-chart.m .pts-mod{display:none}
-.pts-chart.s .pts-barra .bd{display:none}
-.pts-chart.s .pts-ico,.pts-chart.s .pts-mod{display:none}
-.pts-chart.s .pts-barra{width:80%;border-radius:3px 3px 0 0;background:var(--c)}
-.pts-chart.s .pts-lbl{font-size:.55rem}
 </style>
 </head>
 <body>
@@ -727,11 +719,11 @@ function abrirPuntosJugador(nombre) {
     else { cont.append(el("span", null, emoji), el("small", null, "×" + n)); }
   };
 
-  const ZONA = 150, MIN_BARRA = 24;
+  const ZONA = 140, MIN_BARRA = 26;
   // alto del bloque de iconos = el de la columna que más iconos apila (así todas las etiquetas quedan alineadas)
   const nIconos = (n) => (n ? (n <= 4 ? n : 2) : 0);
   const maxIconos = Math.max(0, ...datos.map(d => d.x.abandono ? 0 : nIconos(d.x.goals || 0) + nIconos(d.x.assists || 0) + nIconos(d.x.ownGoals || 0)));
-  const altoIconos = Math.max(40, maxIconos * 19 + 10);
+  const altoIconos = Math.max(34, maxIconos * 17 + 8);
   const maxPts = Math.max(10, ...datos.map(d => d.pts || 0));
   const chart = $("pts-chart"); chart.textContent = "";
   const detalle = $("pts-detalle");
@@ -795,16 +787,7 @@ function abrirPuntosJugador(nombre) {
 
   $("modal").classList.remove("active");
   $("modal-pts").classList.add("active");
-  // Con la ventana ya visible, se mide el ancho por columna y se elige el nivel de detalle (así nunca hace falta barra de desplazamiento)
-  const n = datos.length;
-  if (n) {
-    const ancho = ($("pts-chart-wrap").clientWidth || Math.min(760, window.innerWidth * 0.96)) - 16;
-    const colW = ancho / n;
-    chart.classList.toggle("m", colW < 34 && colW >= 20);
-    chart.classList.toggle("s", colW < 20);
-    const paso = colW >= 20 ? 1 : Math.ceil(24 / Math.max(colW, 1));     // etiquetas P1, P2... solo cada "paso" columnas
-    chart.querySelectorAll(".pts-lbl").forEach((l, i) => { if (paso > 1 && (i % paso !== 0 && i !== n - 1)) l.textContent = ""; });
-  }
+  const wrap = $("pts-chart-wrap"); wrap.scrollLeft = wrap.scrollWidth;     // empieza viendo el último partido
 }
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { cerrarPuntos(); $("modal").classList.remove("active"); } });
 
