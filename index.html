@@ -123,6 +123,8 @@ td.name:hover .nm{text-decoration:underline}
 .fifa-left{width:74px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .fifa-ovr{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:3.6rem;line-height:.95}
 .fifa-pos{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1rem;letter-spacing:1px}
+.fifa-trend{font-weight:900;font-size:.95rem}
+.fifa-trend.up{color:#15803d}.fifa-trend.down{color:#dc2626}.fifa-trend.eq{color:#6b5a3a}
 .fifa-sep{width:44px;border-top:2px solid rgba(90,59,11,.45);margin:4px 0}
 .fifa-left .card-avatar{background:#5a3b0b;border-color:#f3dc9a;width:46px;height:46px}
 .fifa-rombo{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}
@@ -236,7 +238,7 @@ td.name:hover .nm{text-decoration:underline}
         <div class="fifa-top">
           <div class="fifa-left">
             <div class="fifa-ovr" id="card-ovr">--</div>
-            <div class="fifa-pos">MEDIA</div>
+            <div class="fifa-pos">MEDIA <span id="card-trend" class="fifa-trend"></span></div>
             <div class="fifa-sep"></div>
             <div class="card-avatar" id="card-avatar">--</div>
           </div>
@@ -512,15 +514,15 @@ function indicePartidosPorJugador() {
   indiceCache = { ref: hist, len: hist.length, mapa };
   return mapa;
 }
-function ultimosPartidos(nombre, modo) {
+function ultimosPartidos(nombre, modo, saltar = 0) {     // "saltar" = cuántos partidos finales se dejan fuera (ventana anterior)
   let l = indicePartidosPorJugador().get(nombre) || [];
   if (modo && modo !== "total") l = l.filter(e => e.mod === modo);
+  if (saltar) l = l.slice(0, Math.max(0, l.length - saltar));
   return l.slice(-N_ULTIMOS);
 }
 const topar = (v) => Math.min(TOPE_ATR, Math.floor(v + 1e-9));
 
-function calcularAtributosPES(r, nombre, modo) {
-  const u = ultimosPartidos(nombre, modo);
+function atributosDeVentana(u, pj) {
   let goles = 0, asis = 0, robos = 0, paradas = 0, pases = 0, autop = 0, mvp = 0, racha = 0, mejorRacha = 0;
   u.forEach(e => {
     goles += e.x.goals || 0; asis += e.x.assists || 0; robos += e.x.recoveries || 0; paradas += e.x.saves || 0;
@@ -533,11 +535,22 @@ function calcularAtributosPES(r, nombre, modo) {
   const def = topar(BASE_ATR + (paradas * 10) / 3 + Math.floor(robos / 30));
   const pas = topar(BASE_ATR + (asis * 10) / 3 + Math.floor(pases / 5));
   const rit = topar(BASE_ATR + mvp * 5 + Math.min(5, Math.floor(mejorRacha / 2)));
-  const pj = r.matches || 0;
   const fis = topar(BASE_ATR + Math.max(0, pj - 10) * 49 / 490);
   const reg = topar(BASE_ATR + (autop * 10) / 3);
   const ovr = topar((tir + pas + rit + def + fis + reg) / 6);
   return { tir, pas, rit, def, fis, reg, ovr };
+}
+
+// Tendencia del OVR: se compara con el OVR de los 10 partidos anteriores (solo si existe esa ventana completa).
+function calcularAtributosPES(r, nombre, modo) {
+  const pj = r.matches || 0;
+  const res = atributosDeVentana(ultimosPartidos(nombre, modo), pj);
+  const previa = ultimosPartidos(nombre, modo, N_ULTIMOS);
+  if (previa.length >= N_ULTIMOS) {
+    res.ovrPrevio = atributosDeVentana(previa, Math.max(0, pj - N_ULTIMOS)).ovr;
+    res.tendencia = Math.sign(res.ovr - res.ovrPrevio);     // 1 sube · -1 baja · 0 igual
+  } else { res.ovrPrevio = null; res.tendencia = null; }
+  return res;
 }
 
 function generarSVGRomboPES(stats) {
@@ -697,6 +710,10 @@ function abrirCarta(p) {
   $("card-ovr").textContent = p.ovr;
   $("card-avatar").textContent = p.avatar;
   $("pes-svg").innerHTML = generarSVGRomboPES(p.pes);
+  const tr = $("card-trend"), t = p.pes.tendencia;
+  tr.className = "fifa-trend" + (t === 1 ? " up" : t === -1 ? " down" : t === 0 ? " eq" : "");
+  tr.textContent = t === 1 ? "▲" : t === -1 ? "▼" : t === 0 ? "–" : "";
+  tr.title = t == null ? "" : `Antes (10 partidos anteriores): ${p.pes.ovrPrevio}`;
   ["rit","tir","pas","reg","def","fis"].forEach(k => { $("at-" + k).textContent = p.pes[k]; });
   $("card-info").innerHTML = `
     <div>🏆 ELO: ${p.elo}</div>
