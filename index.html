@@ -238,7 +238,7 @@ td.name:hover .nm{text-decoration:underline}
         <div class="fifa-top">
           <div class="fifa-left">
             <div class="fifa-ovr" id="card-ovr">--</div>
-            <div class="fifa-pos">MEDIA</div>
+            <div class="fifa-pos" id="card-pos">MEDIA</div>
             <div class="fifa-sep"></div>
             <div class="card-avatar" id="card-avatar">--</div>
           </div>
@@ -496,7 +496,7 @@ function procesarDatosFiltrados() {
 //  RIT: +5 por MVP (10 MVP = 99) · +1 por cada 2 partidos de racha ganadora (máx. +5, racha de 10)
 //  FIS: 10 partidos = 50, 500 partidos = 99 (crece linealmente: +0,1 por partido)
 //  REG: +10 cada 3 autopases
-//  OVR: media de los seis atributos
+//  OVR: media de los 3 atributos más altos · la posición en el campo sale del orden de esos atributos (ver POSICIONES)
 const TOPE_ATR = 99, BASE_ATR = 50, N_ULTIMOS = 10;
 let indiceCache = { ref: null, len: -1, mapa: null };
 function indicePartidosPorJugador() {
@@ -522,6 +522,37 @@ function ultimosPartidos(nombre, modo, saltar = 0) {     // "saltar" = cuántos 
 }
 const topar = (v) => Math.min(TOPE_ATR, Math.floor(v + 1e-9));
 
+// Posiciones: cada una lleva sus atributos en orden de importancia. POR (portero) está pendiente de definir.
+const POSICIONES = [
+  ["LAT", ["rit", "def", "pas"]],
+  ["DEF", ["def", "fis"]],
+  ["MC",  ["pas", "reg"]],
+  ["EXT", ["rit", "tir", "pas"]],
+  ["DEL", ["tir", "pas", "reg"]]
+];
+const ORDEN_DESEMPATE = ["tir", "pas", "rit", "def", "fis", "reg"];
+function asignarPosicion(v) {
+  // 1) Coincidencia exacta: los atributos más altos del jugador son los de la posición y en su mismo orden (los empates valen).
+  for (const [nombre, pat] of POSICIONES) {
+    let ok = true;
+    for (let i = 0; i + 1 < pat.length; i++) if (v[pat[i]] < v[pat[i + 1]]) { ok = false; break; }
+    if (ok) {
+      const ultimo = v[pat[pat.length - 1]];
+      if (ORDEN_DESEMPATE.some(k => !pat.includes(k) && v[k] > ultimo)) ok = false;
+    }
+    if (ok) return nombre;
+  }
+  // 2) Sin coincidencia exacta: la posición cuyos atributos clave están más arriba en el ranking del jugador
+  const ranking = ORDEN_DESEMPATE.slice().sort((a, b) => v[b] - v[a]);       // estable: los empates siguen ORDEN_DESEMPATE
+  let mejor = null, max = -1;
+  for (const [nombre, pat] of POSICIONES) {
+    let pts = 0;
+    pat.forEach((k, i) => { const r = ranking.indexOf(k); if (r < 3) pts += (pat.length - i) * (3 - r); });
+    if (pts > max) { max = pts; mejor = nombre; }
+  }
+  return mejor;
+}
+
 function atributosDeVentana(u, pj) {
   let goles = 0, asis = 0, robos = 0, paradas = 0, pases = 0, autop = 0, mvp = 0, racha = 0, mejorRacha = 0;
   u.forEach(e => {
@@ -537,7 +568,9 @@ function atributosDeVentana(u, pj) {
   const rit = topar(BASE_ATR + mvp * 5 + Math.min(5, Math.floor(mejorRacha / 2)));
   const fis = topar(BASE_ATR + Math.max(0, pj - 10) * 49 / 490);
   const reg = topar(BASE_ATR + (autop * 10) / 3);
-  const ovr = topar((tir + pas + rit + def + fis + reg) / 6);
+  const v = { tir, pas, rit, def, fis, reg };
+  const top3 = Object.values(v).sort((a, b) => b - a).slice(0, 3);
+  const ovr = topar((top3[0] + top3[1] + top3[2]) / 3);
   return { tir, pas, rit, def, fis, reg, ovr };
 }
 
@@ -545,6 +578,7 @@ function atributosDeVentana(u, pj) {
 function calcularAtributosPES(r, nombre, modo) {
   const pj = r.matches || 0;
   const res = atributosDeVentana(ultimosPartidos(nombre, modo), pj);
+  res.pos = pj > 0 ? asignarPosicion(res) : null;
   const previa = ultimosPartidos(nombre, modo, N_ULTIMOS);
   if (previa.length >= N_ULTIMOS) {
     res.ovrPrevio = atributosDeVentana(previa, Math.max(0, pj - N_ULTIMOS)).ovr;
@@ -710,6 +744,7 @@ function abrirCarta(p) {
   $("card-ovr").textContent = p.ovr;
   $("card-avatar").textContent = p.avatar;
   $("pes-svg").innerHTML = generarSVGRomboPES(p.pes);
+  $("card-pos").textContent = p.pes.pos || "–";
   ["rit","tir","pas","reg","def","fis"].forEach(k => { $("at-" + k).textContent = p.pes[k]; });
   $("card-info").innerHTML = `
     <div>🏆 ELO: ${p.elo}</div>
