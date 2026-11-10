@@ -542,13 +542,16 @@ function asignarPosicion(v) {
     }
     if (ok) return nombre;
   }
-  // 2) Sin coincidencia exacta: la posición cuyos atributos clave están más arriba en el ranking del jugador
+  // 2) Sin coincidencia exacta: manda el atributo más alto del jugador. Gana la posición que lo lista antes (más arriba en su regla);
+  //    si hay empate, la que tenga más atributos entre los 3 mejores del jugador y, si sigue el empate, la primera de la lista.
   const ranking = ORDEN_DESEMPATE.slice().sort((a, b) => v[b] - v[a]);       // estable: los empates siguen ORDEN_DESEMPATE
-  let mejor = null, max = -1;
+  const mejorAtr = ranking[0], top3 = ranking.slice(0, 3);
+  let mejor = null, mejorIdx = 99, mejorN = -1;
   for (const [nombre, pat] of POSICIONES) {
-    let pts = 0;
-    pat.forEach((k, i) => { const r = ranking.indexOf(k); if (r < 3) pts += (pat.length - i) * (3 - r); });
-    if (pts > max) { max = pts; mejor = nombre; }
+    const idx = pat.indexOf(mejorAtr);
+    if (idx < 0) continue;
+    const n = pat.filter(k => top3.includes(k)).length;
+    if (idx < mejorIdx || (idx === mejorIdx && n > mejorN)) { mejor = nombre; mejorIdx = idx; mejorN = n; }
   }
   return mejor;
 }
