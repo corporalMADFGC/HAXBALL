@@ -720,9 +720,14 @@ function vistaPorNombre(nombre) {
   // Busca al jugador en el periodo mostrado y, si no está (p. ej. no tiene stats en ese periodo), en la temporada completa.
   const fuentes = [procesarDatosFiltrados(), Object.values(dbActiva().jugadores || {}), Object.values(dbGlobal.jugadores || {})];
   for (const lista of fuentes) {
-    const j = lista.find(x => x && x.name === nombre);
-    const v = j ? obtenerVistaJugador(j, "total") : null;
-    if (v) return derivar(v);
+    // Puede haber varias fichas con el mismo nick (una por auth, otra por nombre): se prueban todas y gana la que tenga más partidos.
+    let mejor = null;
+    for (const j of lista) {
+      if (!j || j.name !== nombre) continue;
+      const v = obtenerVistaJugador(j, "total");
+      if (v && (!mejor || v.matches > mejor.matches)) mejor = v;
+    }
+    if (mejor) return derivar(mejor);
   }
   // Sin estadísticas en ningún sitio: carta en blanco en vez de no hacer nada
   const r = { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0,
@@ -1133,7 +1138,26 @@ function unificarFull(db) {
 }
 
 function normalizarDb(json) {
-  return unificarFull(normalizarDbBase(json));
+  return unificarFull(quitarFichasVacias(normalizarDbBase(json)));
+}
+// Un mismo nick puede venir en varias fichas (la del auth, vacía, y la del nombre, con las stats). Se descartan las vacías
+// cuando hay otra ficha con ese nombre que sí tiene datos; si ninguna tiene datos se conserva una sola.
+function tieneDatos(j) {
+  return Object.values((j && j.modalidades) || {}).some((m) => m && ((m.matches || 0) > 0 || (m.goals || 0) > 0 || (m.wins || 0) > 0));
+}
+function quitarFichasVacias(db) {
+  const grupos = {};
+  Object.entries(db.jugadores || {}).forEach(([k, j]) => {
+    if (!j) return;
+    (grupos[j.name] = grupos[j.name] || []).push([k, j]);
+  });
+  const limpio = {};
+  Object.values(grupos).forEach((lista) => {
+    const conDatos = lista.filter(([, j]) => tieneDatos(j));
+    (conDatos.length ? conDatos : lista.slice(0, 1)).forEach(([k, j]) => { limpio[k] = j; });
+  });
+  db.jugadores = limpio;
+  return db;
 }
 function normalizarDbBase(json) {
   if (Array.isArray(json)) {
