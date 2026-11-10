@@ -115,6 +115,26 @@ td.name:hover .nm{text-decoration:underline}
 .card-header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(0,0,0,0.15);padding-bottom:8px}
 .card-ovr{font-size:2.8rem;font-weight:900;line-height:1;margin:0}
 .card-avatar{width:50px;height:50px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;border:2px solid #fff}
+
+/* CARTA estilo FIFA: arriba OVR + rombo, abajo nombre y atributos en dos columnas */
+.fifa-card{width:320px;height:440px;margin:0 auto;background:linear-gradient(160deg,#8a5a1c,#5e3b0c);clip-path:polygon(0 4%,38% 1.5%,50% 0,62% 1.5%,100% 4%,100% 90%,62% 93.5%,50% 100%,38% 93.5%,0 90%);position:relative;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.fifa-inner{position:absolute;inset:6px;clip-path:polygon(0 4%,38% 1.8%,50% 0.4%,62% 1.8%,100% 4%,100% 90%,62% 93.3%,50% 99.4%,38% 93.3%,0 90%);background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 3px,rgba(0,0,0,.03) 3px 6px),linear-gradient(170deg,#f3dc9a 0%,#e1bb62 45%,#cf9f3d 100%);color:#5a3b0b;display:flex;flex-direction:column;padding:22px 20px 34px}
+.fifa-top{display:flex;align-items:center;gap:6px;flex:1;min-height:0}
+.fifa-left{width:74px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.fifa-ovr{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:3.6rem;line-height:.95}
+.fifa-pos{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1rem;letter-spacing:1px}
+.fifa-sep{width:44px;border-top:2px solid rgba(90,59,11,.45);margin:4px 0}
+.fifa-left .card-avatar{background:#5a3b0b;border-color:#f3dc9a;width:46px;height:46px}
+.fifa-rombo{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}
+.fifa-rombo svg{width:100%;height:auto;max-height:230px}
+.fifa-bottom{margin-top:6px}
+.fifa-name{margin:0 0 4px;text-align:center;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:2rem;line-height:1.05;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1.5px solid rgba(90,59,11,.45);padding-bottom:4px}
+.fifa-stats{display:flex;justify-content:center;align-items:stretch;gap:14px;margin-top:6px}
+.fifa-col{display:flex;flex-direction:column;gap:2px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.35rem;line-height:1.2;min-width:84px}
+.fifa-col b{display:inline-block;min-width:1.7em;text-align:right;font-weight:800;margin-right:4px}
+.fifa-div{width:1.5px;background:rgba(90,59,11,.45)}
+.fifa-note{text-align:center;font-size:.55rem;opacity:.65;margin-top:6px}
+#modal .card-stats-grid{width:320px;margin:10px auto 0;color:#fff;background:rgba(0,0,0,.55);font-size:.72rem;gap:3px 8px}
 .pes-hexagon-container{display:flex;justify-content:center;align-items:center;margin:8px 0}
 .card-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;font-weight:bold;background:rgba(255,255,255,0.3);padding:8px;border-radius:8px}
 
@@ -211,24 +231,31 @@ td.name:hover .nm{text-decoration:underline}
   <div style="position:relative" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
     <div class="vtabs"><button type="button" aria-selected="true">💎 Perfil</button><button type="button" aria-selected="false" onclick="verPuntos()">📊 Puntos</button></div>
-    <div class="fut-card-gold">
-      <div class="card-header">
-        <div>
-          <div class="card-ovr" id="card-ovr">--</div>
-          <div style="font-size:0.75rem;font-weight:bold;text-transform:uppercase">MEDIA OVR</div>
+    <div class="fifa-card">
+      <div class="fifa-inner">
+        <div class="fifa-top">
+          <div class="fifa-left">
+            <div class="fifa-ovr" id="card-ovr">--</div>
+            <div class="fifa-pos">MEDIA</div>
+            <div class="fifa-sep"></div>
+            <div class="card-avatar" id="card-avatar">--</div>
+          </div>
+          <div class="fifa-rombo">
+            <svg viewBox="0 0 200 180" id="pes-svg"></svg>
+          </div>
         </div>
-        <h2 id="card-name" style="margin:0;font-size:1.4rem;text-transform:uppercase;text-align:right">JUGADOR</h2>
-        <div class="card-avatar" id="card-avatar">--</div>
+        <div class="fifa-bottom">
+          <h2 class="fifa-name" id="card-name">JUGADOR</h2>
+          <div class="fifa-stats">
+            <div class="fifa-col"><div><b id="at-rit">--</b> RIT</div><div><b id="at-tir">--</b> TIR</div><div><b id="at-pas">--</b> PAS</div></div>
+            <div class="fifa-div"></div>
+            <div class="fifa-col"><div><b id="at-reg">--</b> REG</div><div><b id="at-def">--</b> DEF</div><div><b id="at-fis">--</b> FIS</div></div>
+          </div>
+          <div class="fifa-note">Atributos: últimos 10 partidos · FIS: todos</div>
+        </div>
       </div>
-
-      <!-- Hexágono estilo PES 6 -->
-      <div class="pes-hexagon-container">
-        <svg width="170" height="150" viewBox="0 0 200 180" id="pes-svg"></svg>
-        <div style="font-size:.62rem;text-align:center;opacity:.7;margin-top:2px">Atributos: últimos 10 partidos (FIS: todos)</div>
-      </div>
-
-      <div class="card-stats-grid" id="card-info"></div>
     </div>
+    <div class="card-stats-grid" id="card-info"></div>
   </div>
 </div>
 
@@ -539,7 +566,7 @@ function generarSVGRomboPES(stats) {
 
     let lx = cx + (r + 18) * Math.cos(angle);
     let ly = cy + (r + 18) * Math.sin(angle);
-    labelTags += `<text x="${lx}" y="${ly + 4}" font-size="10" font-weight="bold" text-anchor="middle" fill="#111">${labels[i]} ${vals[i]}</text>`;
+    labelTags += `<text x="${lx}" y="${ly + 4}" font-size="10" font-weight="bold" text-anchor="middle" fill="#5a3b0b">${labels[i]} ${vals[i]}</text>`;
   }
 
   return `${gridLines}<polygon points="${polyPts.join(" ")}" fill="rgba(30,91,184,0.5)" stroke="#1e5bb8" stroke-width="2"/>${labelTags}`;
@@ -670,6 +697,7 @@ function abrirCarta(p) {
   $("card-ovr").textContent = p.ovr;
   $("card-avatar").textContent = p.avatar;
   $("pes-svg").innerHTML = generarSVGRomboPES(p.pes);
+  ["rit","tir","pas","reg","def","fis"].forEach(k => { $("at-" + k).textContent = p.pes[k]; });
   $("card-info").innerHTML = `
     <div>🏆 ELO: ${p.elo}</div>
     <div>🎮 PJ: ${p.matches} | 🥇 V: ${p.wins} | 🔥 Racha: ${p.bestStreak || 0}</div>
