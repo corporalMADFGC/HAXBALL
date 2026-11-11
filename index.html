@@ -678,14 +678,15 @@ function ultimosPartidos(nombre, modo, saltar = 0) {     // "saltar" = cuántos 
 const topar = (v) => Math.min(TOPE_ATR, Math.floor(v + 1e-9));
 const claseTier = (ovr) => (ovr <= 64 ? "t-bronce" : ovr <= 74 ? "t-plata" : "t-oro");   // bronce ≤64 · plata 65–74 · oro ≥75
 
-// Posiciones: cada una lleva sus atributos en orden de importancia. POR (portero) está pendiente de definir.
+// Posiciones (sin contar FIS): cada una lleva sus atributos en orden de importancia. POR (portero) está pendiente de definir.
 const POSICIONES = [
-  ["DEF", ["def", "fis"]],
+  ["DEF", ["def"]],
   ["MC",  ["pas", "reg"]],
   ["EXT", ["rit", "tir", "pas"]],
   ["DEL", ["tir", "pas", "reg"]]
 ];
-const ORDEN_DESEMPATE = ["tir", "pas", "rit", "def", "fis", "reg"];
+// El físico (FIS) NO cuenta para decidir la posición: sube solo con los partidos jugados, no con lo que haces en el campo.
+const ORDEN_DESEMPATE = ["tir", "pas", "rit", "def", "reg"];
 function asignarPosicion(v) {
   // Todos los atributos iguales (p. ej. un jugador nuevo con todo a 50): MC
   if (ORDEN_DESEMPATE.every(k => v[k] === v[ORDEN_DESEMPATE[0]])) return "MC";
