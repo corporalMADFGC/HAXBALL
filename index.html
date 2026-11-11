@@ -223,6 +223,58 @@ td.name:hover .nm{text-decoration:underline}
 .once-hueco{position:absolute;inset:0;border:.5cqw dashed rgba(255,255,255,.6);border-radius:2cqw;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);font-weight:800;font-size:3cqw;text-align:center;line-height:1.1;padding:1cqw}
 .once-vacio{padding:26px 14px;text-align:center;color:#93a4ba;font-size:.9rem}
 .once-pie{font-size:.72rem;color:#93a4ba;text-align:center;max-width:480px}
+
+/* CARTAS ESPECIALES (Icono · TOTY · POTM) */
+[hidden]{display:none!important}
+.time-bar button.tab-esp{background:linear-gradient(135deg,#7b3fe4,#3b1c8c 60%,#0a2a6b)!important;border-color:#5b2bc4!important;color:#fff!important;font-weight:800;letter-spacing:.4px;box-shadow:0 2px 8px rgba(91,43,196,.4)}
+.time-bar button.tab-esp[aria-selected=true]{outline:2px solid #f0b429;outline-offset:1px}
+.fifa-card.t-icono,.sp-card.t-icono,.sp-tile.t-icono{--c-borde:linear-gradient(160deg,#fffbe6,#d9bd6a 55%,#8fb8e8);--c-fondo:linear-gradient(170deg,#ffffff 0%,#f3ecd0 38%,#e6d28e 72%,#cfe0f2 100%);--c-txt:#5a4310;--c-linea:rgba(90,67,16,.4);--c-av:#5a4310;--c-av-borde:#fffbe6;--c-glow:rgba(255,236,160,.9)}
+.fifa-card.t-toty,.sp-card.t-toty,.sp-tile.t-toty{--c-borde:linear-gradient(160deg,#ffe58a,#c8941c 55%,#6b4a08);--c-fondo:linear-gradient(170deg,#1646a8 0%,#0b2a6b 45%,#050f2e 100%);--c-txt:#f7d878;--c-linea:rgba(247,216,120,.55);--c-av:#f7d878;--c-av-borde:#0b2a6b;--c-glow:rgba(90,150,255,.9)}
+.fifa-card.t-potm,.sp-card.t-potm,.sp-tile.t-potm{--c-borde:linear-gradient(160deg,#e6ccff,#8a4de8 55%,#3c1486);--c-fondo:linear-gradient(170deg,#9a5cff 0%,#5a24b8 45%,#2a0c63 100%);--c-txt:#ffffff;--c-linea:rgba(255,255,255,.45);--c-av:#ffffff;--c-av-borde:#5a24b8;--c-glow:rgba(220,170,255,.9)}
+.fifa-card.t-toty .tend,.fifa-card.t-potm .tend{filter:brightness(1.3)}
+.fifa-card.t-toty .card-avatar,.fifa-card.t-potm .card-avatar{color:#0b1530}
+.fifa-card.t-icono .card-avatar{color:#fffbe6}
+#especiales-view{margin-top:4px}
+.sp-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.sp-tile{position:relative;overflow:hidden;cursor:pointer;border:2px solid transparent;border-radius:14px;padding:12px 8px 10px;text-align:center;color:var(--c-txt);background:var(--c-fondo);box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .15s,box-shadow .15s}
+.sp-tile:hover{transform:translateY(-2px)}
+.sp-tile[aria-selected=true]{border-color:#f0b429;box-shadow:0 0 0 3px rgba(240,180,41,.35),0 8px 22px rgba(0,0,0,.35);transform:translateY(-2px)}
+.sp-tile .e{display:block;font-size:1.9rem;line-height:1}
+.sp-tile b{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(1rem,4.2vw,1.55rem);letter-spacing:1px;line-height:1.1;margin-top:3px;text-transform:uppercase}
+.sp-tile small{display:block;font-size:.7rem;font-weight:700;opacity:.85;margin-top:2px}
+.sp-tile .n{position:absolute;top:6px;right:8px;min-width:22px;padding:1px 7px;border-radius:999px;font-weight:800;font-size:.75rem;background:rgba(0,0,0,.35);color:#fff}
+.sp-tile.t-icono .n{background:rgba(90,67,16,.7)}
+.sp-req{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;align-items:center;margin:0 0 14px;padding:10px 12px;border-radius:12px;font-size:.82rem;font-weight:600;background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.sp-req b{color:var(--ink)}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;align-items:start}
+.sp-col{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:10px 8px 14px;min-height:120px}
+.sp-col-h{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:6px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:1px;text-transform:uppercase}
+.sp-col-h small{font-family:"Barlow","Segoe UI",system-ui,sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.2px;text-transform:none;color:var(--mut);flex-basis:100%;text-align:center;margin-top:-4px}
+.sp-cards{display:flex;flex-direction:column;align-items:center;gap:16px}
+.sp-card{position:relative;width:190px;height:262px;background:var(--c-borde);clip-path:polygon(0 4%,38% 1.5%,50% 0,62% 1.5%,100% 4%,100% 90%,62% 93.5%,50% 100%,38% 93.5%,0 90%);cursor:pointer;transition:transform .18s;filter:drop-shadow(0 8px 12px rgba(0,0,0,.45))}
+.sp-wrap{filter:drop-shadow(0 8px 12px rgba(0,0,0,.45));transition:transform .18s}
+.sp-wrap:hover,.sp-wrap:focus-visible{transform:translateY(-4px) scale(1.04);outline:none}
+.sp-wrap .sp-card{filter:none}
+.sp-in{position:absolute;inset:4px;clip-path:polygon(0 4%,38% 1.8%,50% 0.4%,62% 1.8%,100% 4%,100% 90%,62% 93.3%,50% 99.4%,38% 93.3%,0 90%);background:radial-gradient(circle at 70% 30%,var(--c-glow),transparent 55%),repeating-linear-gradient(115deg,rgba(255,255,255,.08) 0 3px,rgba(0,0,0,.03) 3px 6px),var(--c-fondo);color:var(--c-txt);display:flex;flex-direction:column;padding:16px 12px 20px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;overflow:hidden}
+.sp-in::after{content:"";position:absolute;top:-20%;left:-60%;width:40%;height:140%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:rotate(12deg);animation:spBrillo 3.6s ease-in-out infinite}
+@keyframes spBrillo{0%,55%{left:-60%}100%{left:130%}}
+.sp-mark{position:absolute;right:6px;top:38px;font-size:5.6rem;line-height:1;opacity:.16;pointer-events:none}
+.sp-top{display:flex;gap:6px;flex:1;min-height:0}
+.sp-left{width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;z-index:1}
+.sp-ovr{font-weight:800;font-size:2.7rem;line-height:.95}
+.sp-pos{font-weight:700;font-size:.95rem;letter-spacing:1px}
+.sp-sep{width:34px;border-top:2px solid var(--c-linea);margin:2px 0}
+.sp-av{width:38px;height:38px;border-radius:50%;background:var(--c-av);border:2px solid var(--c-av-borde);color:var(--c-av-borde);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem}
+.sp-tipo{margin-top:4px;font-size:.62rem;font-weight:800;letter-spacing:1.2px;text-align:center;line-height:1.05;text-transform:uppercase}
+.sp-name{position:relative;z-index:1;margin:0 0 3px;text-align:center;font-weight:800;font-size:1.35rem;line-height:1.05;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1.5px solid var(--c-linea);padding-bottom:3px}
+.sp-stats{position:relative;z-index:1;display:flex;justify-content:center;gap:12px;font-weight:700;font-size:1rem;line-height:1.1}
+.sp-stats span{text-align:center}
+.sp-stats b{display:block;font-weight:800;font-size:1.25rem}
+.sp-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sp-fecha{font-size:.78rem;font-weight:800;padding:3px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.sp-vacio{width:190px;height:262px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:14px;border:2px dashed var(--line);border-radius:18px;color:var(--mut);font-size:.8rem;font-weight:700;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(127,127,127,.06) 10px 20px)}
+.sp-vacio i{font-style:normal;font-size:2rem;filter:grayscale(.4)}
+@media(max-width:560px){.sp-tile small{display:none}.sp-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -259,6 +311,8 @@ td.name:hover .nm{text-decoration:underline}
     <div class="empty" id="empty" hidden>No se encontraron registros en este periodo.</div>
   </div>
 
+  <div id="especiales-view" hidden></div>
+
   <div id="matches-view" hidden>
     <div class="chips" id="mod-chips"></div>
     <div class="mgrid" id="mgrid"></div>
@@ -291,7 +345,7 @@ td.name:hover .nm{text-decoration:underline}
             <div class="fifa-div"></div>
             <div class="fifa-col"><div><b id="at-reg">--</b> REG</div><div><b id="at-def">--</b> DEF</div><div><b id="at-fis">--</b> FIS</div></div>
           </div>
-          <div class="fifa-note">Atributos: últimos 10 partidos · FIS: todos</div>
+          <div class="fifa-note" id="card-note">Atributos: últimos 10 partidos · FIS: todos</div>
         </div>
       </div>
     </div>
@@ -439,13 +493,17 @@ function pintarTiempo() {
     b.addEventListener("click", onClick);
     cont.append(b);
   };
-  boton("🏆 Temporada " + temporadaNum, tiempoFiltro === "temp1", () => elegirTiempo("temp1"), "tab-temp");
+  const enEsp = tab === "especiales";     // pestaña global: sin Diario/Semanal/Mensual ni temporadas cerradas
+  boton("🏆 Temporada " + temporadaNum, tiempoFiltro === "temp1" && !enEsp, () => { if (tab === "especiales") tab = "total"; elegirTiempo("temp1"); }, "tab-temp");
   boton("🔴 PARTIDOS", tab === "partidos", () => { tab = "partidos"; matchLimit = 20; render(); }, "tab-partidos");
-  cont.append(el("span", "sep"));
-  [["diario", "📅 Diario"], ["semanal", "📅 Semanal"], ["mensual", "📅 Mensual"]]
-    .forEach(([k, t]) => boton(t, tiempoFiltro === k, () => elegirTiempo(k)));
-  Object.keys(dbArchivo).map(Number).sort((a, b) => a - b)
-    .forEach(n => boton("📁 Temporada " + n, tiempoFiltro === "arch:" + n, () => elegirTiempo("arch:" + n)));
+  boton("💎 CARTAS ESPECIALES", tab === "especiales", () => { tab = "especiales"; render(); }, "tab-esp");
+  if (!enEsp) {
+    cont.append(el("span", "sep"));
+    [["diario", "📅 Diario"], ["semanal", "📅 Semanal"], ["mensual", "📅 Mensual"]]
+      .forEach(([k, t]) => boton(t, tiempoFiltro === k, () => elegirTiempo(k)));
+    Object.keys(dbArchivo).map(Number).sort((a, b) => a - b)
+      .forEach(n => boton("📁 Temporada " + n, tiempoFiltro === "arch:" + n, () => elegirTiempo("arch:" + n)));
+  }
   const bOnce = el("button", "tab-once", "⭐ ONCE DE LA SEMANA");
   bOnce.type = "button";
   bOnce.addEventListener("click", abrirOnce);
@@ -841,6 +899,7 @@ function verPuntos() { $("modal").classList.remove("active"); abrirPuntosJugador
 
 function abrirCarta(p) {
   nombreActual = p.name;
+  $("card-note").textContent = "Atributos: últimos 10 partidos · FIS: todos";
   const passPct = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) : 0;
   $("card-name").textContent = p.name;
   $("card-ovr").textContent = p.ovr;
@@ -1117,11 +1176,15 @@ function render() {
   pintarCuenta();
   pintarTabs();
   const esPartidos = tab === "partidos";
-  if (esPartidos) pedirPartidos();
-  $("sort-ctl").style.display = esPartidos ? "none" : "flex";
-  $("wrap-ranking").hidden = esPartidos;
-  $("podium").hidden = esPartidos;
+  const esEsp = tab === "especiales";
+  if (esPartidos || esEsp) pedirPartidos();
+  $("sort-ctl").style.display = (esPartidos || esEsp) ? "none" : "flex";
+  $("search-bar").style.display = esEsp ? "none" : "";
+  $("wrap-ranking").hidden = esPartidos || esEsp;
+  $("podium").hidden = esPartidos || esEsp;
   $("matches-view").hidden = !esPartidos;
+  $("especiales-view").hidden = !esEsp;
+  $("tabs").hidden = esEsp;
 
   // selector de orden (se rellena una vez)
   const sel = $("sortKey");
@@ -1137,6 +1200,12 @@ function render() {
   if (esPartidos) {
     pintarKpis(datosJugadores.length);
     pintarMatches();
+    return;
+  }
+  if (esEsp) {
+    pintarKpis(datosJugadores.length);
+    pintarEspeciales();
+    $("sub").textContent = cargando ? "Cargando…" : `Temporada ${temporadaNum} · Cartas especiales (global)`;
     return;
   }
 
@@ -1302,6 +1371,141 @@ async function load() {
   await cargarArchivos();
   render();
   if ($("modal-once").classList.contains("active")) pintarOnce();
+}
+
+
+// ---------- CARTAS ESPECIALES (ICONO · TOTY · POTM) ----------
+// Pestaña GLOBAL: ignora periodo (diario/semanal/mensual) y modalidad. Usa todos los partidos de la temporada en curso (sin 1v1, como la carta normal).
+// Se recorre el historial de cada jugador partido a partido: tras cada partido (a partir del 10º) se calculan sus atributos con los últimos 10 partidos.
+// La primera vez que la media de 3 atributos entra en el rango de una carta, el jugador la gana (y la conserva) con la fecha de ese partido.
+//   DEL = REG + RIT + TIR · DEF = DEF + FIS + RIT · MC = PAS + FIS + RIT   (dividido entre 3)
+// Rangos (el límite superior no entra): ICONO 95–99 · TOTY 90–95 · POTM 85–90.
+const ESP_POS = [
+  { k: "del", t: "DELANTEROS", s: "DEL", e: "⚔️", attrs: ["reg", "rit", "tir"], lbl: ["REG", "RIT", "TIR"], nombre: "REG · RIT · TIR" },
+  { k: "def", t: "DEFENSAS",   s: "DEF", e: "🛡️", attrs: ["def", "fis", "rit"], lbl: ["DEF", "FIS", "RIT"], nombre: "DEF · FIS · RIT" },
+  { k: "mc",  t: "MEDIOS",     s: "MC",  e: "🎯", attrs: ["pas", "fis", "rit"], lbl: ["PAS", "FIS", "RIT"], nombre: "PAS · FIS · RIT" }
+];
+const ESP_TIPOS = [
+  { k: "icono", t: "Cartas Icono", e: "👑", marca: "👑", min: 95, max: 100, texto: "95 – 99", sub: "Las leyendas" },
+  { k: "toty",  t: "Cartas TOTY",  e: "🏆", marca: "🏆", min: 90, max: 95,  texto: "90 – 95", sub: "Equipo del año" },
+  { k: "potm",  t: "Cartas POTM",  e: "🔥", marca: "🔥", min: 85, max: 90,  texto: "85 – 90", sub: "Jugador del mes" }
+];
+let espTipo = "icono";
+let espCache = { ref: null, len: -1, datos: null };
+
+const fmtFechaEsp = (ts) => new Date(ts).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Madrid" });
+
+function listaEspeciales() {
+  const hist = dbGlobal.partidaHistorial || [];
+  if (espCache.ref === hist && espCache.len === hist.length && espCache.datos) return espCache.datos;
+  // historial por jugador, en orden cronológico, sin 1v1 ni abandonos (misma regla que la carta normal)
+  const mapa = new Map();
+  hist.filter(p => p && p.modalidad !== "1v1" && p.timestamp).sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
+    const mvp = mvpDelPartido(p), gan = ganadorEquipo(p);
+    (p.participantes || []).forEach(x => {
+      if (!x || x.abandono) return;
+      if (!mapa.has(x.name)) mapa.set(x.name, []);
+      mapa.get(x.name).push({ ts: p.timestamp, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+    });
+  });
+  const avatares = {};
+  Object.values(dbGlobal.jugadores || {}).forEach(j => { if (j && j.name) avatares[j.name] = j.avatar || j.name.substring(0, 2).toUpperCase(); });
+
+  const res = {};
+  ESP_TIPOS.forEach(t => { res[t.k] = { del: [], def: [], mc: [] }; });
+  mapa.forEach((lista, nombre) => {
+    const ganadas = new Set();                                   // "tipo|pos": solo cuenta la primera vez
+    for (let i = N_ULTIMOS - 1; i < lista.length; i++) {
+      const w = atributosDeVentana(lista.slice(i - N_ULTIMOS + 1, i + 1), i + 1);
+      ESP_POS.forEach(pos => {
+        const media = pos.attrs.reduce((acc, k) => acc + w[k], 0) / 3;
+        const tipo = ESP_TIPOS.find(t => media >= t.min && media < t.max);
+        if (!tipo || ganadas.has(tipo.k + "|" + pos.k)) return;
+        ganadas.add(tipo.k + "|" + pos.k);
+        res[tipo.k][pos.k].push({ nombre, avatar: avatares[nombre] || nombre.substring(0, 2).toUpperCase(), w, media, ts: lista[i].ts });
+      });
+    }
+  });
+  ESP_TIPOS.forEach(t => ESP_POS.forEach(pos => res[t.k][pos.k].sort((a, b) => b.media - a.media || a.ts - b.ts || a.nombre.localeCompare(b.nombre))));
+  espCache = { ref: hist, len: hist.length, datos: res };
+  return res;
+}
+
+function abrirCartaEspecial(tipo, pos, item) {
+  // La ficha muestra los atributos del momento en que se ganó la carta; los datos de abajo (PJ, goles…) son los actuales.
+  const base = dbGlobal.jugadores ? Object.values(dbGlobal.jugadores).filter(j => j && j.name === item.nombre).map(j => obtenerVistaJugador(j, "total")).filter(Boolean).sort((a, b) => b.matches - a.matches)[0] : null;
+  const v = derivar(Object.assign(base ? { ...base } : { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, puntos: 0, autopases: 0, streak: 0, bestStreak: 0, elo: 1000 }, { name: item.nombre, avatar: item.avatar }));
+  v.pes = { ...item.w, pos: pos.s, tendencia: null };
+  v.ovr = Math.round(item.media);
+  abrirCarta(v);
+  document.querySelector("#modal .fifa-card").className = "fifa-card t-" + tipo.k;
+  $("card-note").textContent = `${tipo.t.toUpperCase()} · conseguida el ${fmtFechaEsp(item.ts)} · media de 3 atributos en 10 partidos`;
+}
+
+function cartaEspecial(tipo, pos, item) {
+  const wrap = el("div", "sp-item");
+  const btn = el("div", "sp-wrap");
+  btn.tabIndex = 0;
+  btn.setAttribute("role", "button");
+  btn.setAttribute("aria-label", `${item.nombre}, carta ${tipo.t}, ${pos.s}, media ${Math.round(item.media)}, conseguida el ${fmtFechaEsp(item.ts)}`);
+  const card = el("div", "sp-card t-" + tipo.k);
+  const inn = el("div", "sp-in");
+  inn.append(el("div", "sp-mark", tipo.marca));
+  const top = el("div", "sp-top");
+  const left = el("div", "sp-left");
+  left.append(el("div", "sp-ovr", String(Math.round(item.media))), el("div", "sp-pos", pos.s), el("div", "sp-sep"), el("div", "sp-av", item.avatar), el("div", "sp-tipo", tipo.k.toUpperCase()));
+  top.append(left);
+  inn.append(top, el("h4", "sp-name", item.nombre));
+  const st = el("div", "sp-stats");
+  pos.attrs.forEach((k, i) => { const sp = el("span", null, pos.lbl[i]); sp.prepend(el("b", null, String(item.w[k]))); st.append(sp); });
+  inn.append(st);
+  card.append(inn); btn.append(card);
+  const abrir = () => abrirCartaEspecial(tipo, pos, item);
+  btn.addEventListener("click", abrir);
+  btn.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); } });
+  wrap.append(btn, el("div", "sp-fecha", "📅 " + fmtFechaEsp(item.ts)));
+  return wrap;
+}
+
+function pintarEspeciales() {
+  const cont = $("especiales-view"); cont.textContent = "";
+  if (cargando) { cont.append(el("div", "empty", "Cargando…")); return; }
+  const datos = listaEspeciales();
+  const tipo = ESP_TIPOS.find(t => t.k === espTipo) || ESP_TIPOS[0];
+
+  const tiles = el("div", "sp-tiles");
+  ESP_TIPOS.forEach(t => {
+    const total = ESP_POS.reduce((acc, pos) => acc + datos[t.k][pos.k].length, 0);
+    const b = el("button", "sp-tile t-" + t.k);
+    b.type = "button";
+    b.setAttribute("aria-selected", String(t.k === tipo.k));
+    b.append(el("span", "n", String(total)), el("span", "e", t.e), el("b", null, t.t), el("small", null, t.sub));
+    b.addEventListener("click", () => { espTipo = t.k; pintarEspeciales(); });
+    tiles.append(b);
+  });
+  cont.append(tiles);
+
+  const req = el("div", "sp-req");
+  req.append(el("span", null, `Media de 3 atributos en 10 partidos: `), el("b", null, tipo.texto));
+  ESP_POS.forEach(pos => req.append(el("span", null, `${pos.e} ${pos.s} = ${pos.nombre}`)));
+  cont.append(req);
+
+  const grid = el("div", "sp-grid");
+  ESP_POS.forEach(pos => {
+    const col = el("div", "sp-col");
+    const n = datos[tipo.k][pos.k].length;
+    const h = el("div", "sp-col-h", `${pos.e} ${pos.t} (${pos.s})`);
+    h.append(el("small", null, `${pos.nombre} · media ${tipo.texto} · ${n} carta${n === 1 ? "" : "s"}`));
+    col.append(h);
+    const lista = el("div", "sp-cards");
+    if (!n) {
+      const vac = el("div", "sp-vacio"); vac.append(el("i", null, "🔒"), el("span", null, "Todavía nadie"), el("span", null, `Necesita media ${tipo.texto}`));
+      lista.append(vac);
+    } else datos[tipo.k][pos.k].forEach(item => lista.append(cartaEspecial(tipo, pos, item)));
+    col.append(lista);
+    grid.append(col);
+  });
+  cont.append(grid);
 }
 
 // ---------- ONCE DE LA SEMANA ----------
