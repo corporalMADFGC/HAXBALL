@@ -103,6 +103,11 @@ td.name:hover .nm{text-decoration:underline}
 .pl.out{opacity:.55}
 .pl .pn{font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl .pp{font-weight:800;font-size:.85rem;color:var(--gold);text-align:right}
+/* Color de los puntos por partido: <0 rojo · 0–4,9 amarillo · 5–9,9 verde · ≥10 azul (igual que la ventana de puntos) */
+.pl .pp.ro{color:#dc2626}
+.pl .pp.am{color:#d9a400}
+.pl .pp.ve{color:#22a84a}
+.pl .pp.az{color:#1e6fe0}
 .pl .ch{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:3px 8px;font-size:.72rem;color:var(--mut)}
 .more{display:block;margin:14px auto 0;padding:8px 20px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;font-weight:700;cursor:pointer}
 @media(max-width:560px){.teams{grid-template-columns:1fr}.podium{gap:6px}.pod .pv{font-size:1.5rem}}
@@ -1130,7 +1135,7 @@ function pintarMatches() {
           row.addEventListener("click", () => abrirPuntosJugador(x.name));
           row.append(el("div", "pn", (x === mvp ? "⭐ " : "") + x.name + (x.abandono ? " (abandonó)" : "")));
           const mostrarPts = partido.modalidad !== "1v1" && typeof x.puntosMVP === "number" && !x.abandono;
-          row.append(el("div", "pp", mostrarPts ? fmtPts(x.puntosMVP) + " pts" : ""));
+          row.append(el("div", "pp" + (mostrarPts ? " " + claseBolaPuntos(Math.round(x.puntosMVP * 10) / 10) : ""), mostrarPts ? fmtPts(x.puntosMVP) + " pts" : ""));
           const ch = el("div", "ch");
           if (x.goals) ch.append(el("span", null, `⚽ ${x.goals}`));
           if (x.assists) ch.append(el("span", null, `🅰️ ${x.assists}`));
