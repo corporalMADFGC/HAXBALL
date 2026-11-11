@@ -117,24 +117,27 @@ td.name:hover .nm{text-decoration:underline}
 .card-avatar{width:50px;height:50px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;border:2px solid #fff}
 
 /* CARTA estilo FIFA: arriba OVR + rombo, abajo nombre y atributos en dos columnas */
-.fifa-card{width:320px;height:440px;margin:0 auto;background:linear-gradient(160deg,#8a5a1c,#5e3b0c);clip-path:polygon(0 4%,38% 1.5%,50% 0,62% 1.5%,100% 4%,100% 90%,62% 93.5%,50% 100%,38% 93.5%,0 90%);position:relative;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
-.fifa-inner{position:absolute;inset:6px;clip-path:polygon(0 4%,38% 1.8%,50% 0.4%,62% 1.8%,100% 4%,100% 90%,62% 93.3%,50% 99.4%,38% 93.3%,0 90%);background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 3px,rgba(0,0,0,.03) 3px 6px),linear-gradient(170deg,#f3dc9a 0%,#e1bb62 45%,#cf9f3d 100%);color:#5a3b0b;display:flex;flex-direction:column;padding:22px 20px 34px}
+.fifa-card{--c-borde:linear-gradient(160deg,#8a5a1c,#5e3b0c);--c-fondo:linear-gradient(170deg,#f3dc9a 0%,#e1bb62 45%,#cf9f3d 100%);--c-txt:#5a3b0b;--c-linea:rgba(90,59,11,.45);--c-av:#5a3b0b;--c-av-borde:#f3dc9a;width:320px;height:440px;margin:0 auto;background:var(--c-borde);clip-path:polygon(0 4%,38% 1.5%,50% 0,62% 1.5%,100% 4%,100% 90%,62% 93.5%,50% 100%,38% 93.5%,0 90%);position:relative;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.fifa-inner{position:absolute;inset:6px;clip-path:polygon(0 4%,38% 1.8%,50% 0.4%,62% 1.8%,100% 4%,100% 90%,62% 93.3%,50% 99.4%,38% 93.3%,0 90%);background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 3px,rgba(0,0,0,.03) 3px 6px),var(--c-fondo);color:var(--c-txt);display:flex;flex-direction:column;padding:22px 20px 34px}
 .fifa-top{display:flex;align-items:center;gap:6px;flex:1;min-height:0}
 .fifa-left{width:74px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .fifa-ovr{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:3.6rem;line-height:.95}
 .fifa-pos{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1rem;letter-spacing:1px}
 .tend{font-weight:900;font-size:.8em;margin-left:4px}
 .tend.up{color:#16a34a}.tend.down{color:#dc2626}.tend.eq{color:#94a3b8}
-.fifa-sep{width:44px;border-top:2px solid rgba(90,59,11,.45);margin:4px 0}
-.fifa-left .card-avatar{background:#5a3b0b;border-color:#f3dc9a;width:46px;height:46px}
+.fifa-sep{width:44px;border-top:2px solid var(--c-linea);margin:4px 0}
+.fifa-left .card-avatar{background:var(--c-av);border-color:var(--c-av-borde);width:46px;height:46px}
 .fifa-rombo{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}
 .fifa-rombo svg{width:100%;height:auto;max-height:230px}
 .fifa-bottom{margin-top:6px}
-.fifa-name{margin:0 0 4px;text-align:center;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:2rem;line-height:1.05;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1.5px solid rgba(90,59,11,.45);padding-bottom:4px}
+.fifa-name{margin:0 0 4px;text-align:center;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:2rem;line-height:1.05;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1.5px solid var(--c-linea);padding-bottom:4px}
 .fifa-stats{display:flex;justify-content:center;align-items:stretch;gap:14px;margin-top:6px}
 .fifa-col{display:flex;flex-direction:column;gap:2px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.35rem;line-height:1.2;min-width:84px}
 .fifa-col b{display:inline-block;min-width:1.7em;text-align:right;font-weight:800;margin-right:4px}
-.fifa-div{width:1.5px;background:rgba(90,59,11,.45)}
+.fifa-div{width:1.5px;background:var(--c-linea)}
+/* Tipo de carta según la media (OVR): bronce ≤64 · plata 65–74 · oro ≥75 (oro = valores por defecto) */
+.fifa-card.t-plata{--c-borde:linear-gradient(160deg,#7d8794,#4a525c);--c-fondo:linear-gradient(170deg,#f2f4f7 0%,#cfd5dc 45%,#a9b1bb 100%);--c-txt:#2e3640;--c-linea:rgba(46,54,64,.45);--c-av:#2e3640;--c-av-borde:#f2f4f7}
+.fifa-card.t-bronce{--c-borde:linear-gradient(160deg,#6b3f1d,#43250d);--c-fondo:linear-gradient(170deg,#e6b98c 0%,#c98a55 45%,#a8693a 100%);--c-txt:#4a2810;--c-linea:rgba(74,40,16,.45);--c-av:#4a2810;--c-av-borde:#e6b98c}
 .fifa-note{text-align:center;font-size:.55rem;opacity:.65;margin-top:6px}
 #modal .card-stats-grid{width:320px;margin:10px auto 0;color:#fff;background:rgba(0,0,0,.55);font-size:.72rem;gap:3px 8px}
 .pes-hexagon-container{display:flex;justify-content:center;align-items:center;margin:8px 0}
@@ -495,7 +498,7 @@ function procesarDatosFiltrados() {
 //  PAS: +10 cada 3 asistencias · +1 cada 5 pases completados
 //  RIT: +5 por cada partido ganado seguido (10 seguidos = 99) · +2 por MVP (máx. +20, 10 MVP)
 //  FIS: 10 partidos = 50, 500 partidos = 99 (crece linealmente: +0,1 por partido)
-//  REG: +10 cada 3 autopases
+//  REG: +10 cada 2 autopases (10 autopases = 99)
 //  OVR: media de los 3 atributos más altos · la posición en el campo sale del orden de esos atributos (ver POSICIONES)
 const TOPE_ATR = 99, BASE_ATR = 50, N_ULTIMOS = 10;
 let indiceCache = { ref: null, len: -1, mapa: null };
@@ -571,7 +574,7 @@ function atributosDeVentana(u, pj) {
   const pas = topar(BASE_ATR + (asis * 10) / 3 + Math.floor(pases / 5));
   const rit = topar(BASE_ATR + mejorRacha * 5 + Math.min(20, mvp * 2));
   const fis = topar(BASE_ATR + Math.max(0, pj - 10) * 49 / 490);
-  const reg = topar(BASE_ATR + (autop * 10) / 3);
+  const reg = topar(BASE_ATR + (autop * 10) / 2);
   const v = { tir, pas, rit, def, fis, reg };
   const top3 = Object.values(v).sort((a, b) => b - a).slice(0, 3);
   const ovr = topar((top3[0] + top3[1] + top3[2]) / 3);
@@ -617,7 +620,7 @@ function generarSVGRomboPES(stats) {
 
     let lx = cx + (r + 18) * Math.cos(angle);
     let ly = cy + (r + 18) * Math.sin(angle);
-    labelTags += `<text x="${lx}" y="${ly + 4}" font-size="10" font-weight="bold" text-anchor="middle" fill="#5a3b0b">${labels[i]} ${vals[i]}</text>`;
+    labelTags += `<text x="${lx}" y="${ly + 4}" font-size="10" font-weight="bold" text-anchor="middle" fill="currentColor">${labels[i]} ${vals[i]}</text>`;
   }
 
   return `${gridLines}<polygon points="${polyPts.join(" ")}" fill="rgba(30,91,184,0.5)" stroke="#1e5bb8" stroke-width="2"/>${labelTags}`;
@@ -751,6 +754,7 @@ function abrirCarta(p) {
   const passPct = p.passesTotal > 0 ? Math.round((p.passesCompleted / p.passesTotal) * 100) : 0;
   $("card-name").textContent = p.name;
   $("card-ovr").textContent = p.ovr;
+  document.querySelector("#modal .fifa-card").className = "fifa-card " + (p.ovr <= 64 ? "t-bronce" : p.ovr <= 74 ? "t-plata" : "t-oro");
   $("card-avatar").textContent = p.avatar;
   $("pes-svg").innerHTML = generarSVGRomboPES(p.pes);
   $("card-pos").textContent = p.pes.pos || "–";
