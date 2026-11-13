@@ -490,6 +490,7 @@ td.name:hover .nm{text-decoration:underline}
 
 <script>
 const $ = (id) => document.getElementById(id);
+const nomX = (x) => (x && (x.actual || x.name)) || "";   // nick actual del jugador (el bot lo añade si cambió de nick)
 const TABS_LISTA = ["total", "1v1", "2v2", "3v3", "4v4", "full"];   // "partidos" es un botón de la fila superior (tab === "partidos")
 
 let dbGlobal = { jugadores: {}, partidaHistorial: [] };
@@ -723,8 +724,8 @@ function indicePartidosPorJugador() {
     const mvp = mvpDelPartido(p), gan = ganadorEquipo(p);
     (p.participantes || []).forEach(x => {
       if (!x || x.abandono) return;
-      if (!mapa.has(x.name)) mapa.set(x.name, []);
-      mapa.get(x.name).push({ mod: p.modalidad, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      if (!mapa.has(nomX(x))) mapa.set(nomX(x), []);
+      mapa.get(nomX(x)).push({ mod: p.modalidad, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
     });
   });
   indiceCache = { ref: hist, len: hist.length, mapa };
@@ -1042,9 +1043,9 @@ function cerrarPuntos() { $("modal-pts").classList.remove("active"); }
 function abrirPuntosJugador(nombre) {
   pedirPartidos();
   nombreActual = nombre;
-  const partidos = partidosPeriodo().filter(p => p.modalidad !== "1v1" && (p.participantes || []).some(x => x.name === nombre));   // los 1v1 no puntúan   // orden cronológico
+  const partidos = partidosPeriodo().filter(p => p.modalidad !== "1v1" && (p.participantes || []).some(x => nomX(x) === nombre));   // los 1v1 no puntúan   // orden cronológico
   const datos = partidos.map((p, i) => {
-    const x = p.participantes.find(q => q.name === nombre);
+    const x = p.participantes.find(q => nomX(q) === nombre);
     const tienePts = p.modalidad !== "1v1" && typeof x.puntosMVP === "number" && !x.abandono;
     return { p, x, n: i + 1, gan: ganadorEquipo(p), pts: tienePts ? Math.round(x.puntosMVP * 10) / 10 : null };
   });
@@ -1169,7 +1170,7 @@ function crearTarjetaPartido(partido) {
         .forEach(x => {
           const row = el("div", "pl clicable" + (x === mvp ? " mvp" : "") + (x.abandono ? " out" : ""));
           row.title = "Ver puntos por partido de " + x.name;
-          row.addEventListener("click", () => abrirPuntosJugador(x.name));
+          row.addEventListener("click", () => abrirPuntosJugador(nomX(x)));
           row.append(el("div", "pn", (x === mvp ? "⭐ " : "") + x.name + (x.abandono ? " (abandonó)" : "")));
           const mostrarPts = partido.modalidad !== "1v1" && typeof x.puntosMVP === "number" && !x.abandono;
           row.append(el("div", "pp" + (mostrarPts ? " " + claseBolaPuntos(Math.round(x.puntosMVP * 10) / 10) : ""), mostrarPts ? fmtPts(x.puntosMVP) + " pts" : ""));
@@ -1211,7 +1212,7 @@ function pintarMatches() {
 
   const lista = todos.slice().reverse()
     .filter(p => matchMod === "todas" || p.modalidad === matchMod)
-    .filter(p => !filtroTexto || (p.participantes || []).some(x => (x.name || "").toLowerCase().includes(filtroTexto)));
+    .filter(p => !filtroTexto || (p.participantes || []).some(x => (x.name || "").toLowerCase().includes(filtroTexto) || nomX(x).toLowerCase().includes(filtroTexto)));
 
   const grid = $("mgrid"); grid.textContent = "";
   $("empty-m").hidden = lista.length > 0;
@@ -1475,8 +1476,8 @@ function listaEspeciales() {
     const mvp = mvpDelPartido(p), gan = ganadorEquipo(p);
     (p.participantes || []).forEach(x => {
       if (!x || x.abandono) return;
-      if (!mapa.has(x.name)) mapa.set(x.name, []);
-      mapa.get(x.name).push({ ts: p.timestamp, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      if (!mapa.has(nomX(x))) mapa.set(nomX(x), []);
+      mapa.get(nomX(x)).push({ ts: p.timestamp, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
     });
   });
   const avatares = {};
@@ -1619,7 +1620,7 @@ function calcularOnce(partidos, lunes) {
   Object.values(dbActiva().jugadores || {}).forEach(j => {
     pjReal[j.name] = (pjReal[j.name] || 0) + Object.values(j.modalidades || {}).reduce((s, m) => s + ((m && m.matches) || 0), 0);
   });
-  partidos.forEach(p => (p.participantes || []).forEach(x => { if (x && !x.abandono) enHistorial[x.name] = (enHistorial[x.name] || 0) + 1; }));
+  partidos.forEach(p => (p.participantes || []).forEach(x => { if (x && !x.abandono) enHistorial[nomX(x)] = (enHistorial[nomX(x)] || 0) + 1; }));
   const extraPJ = (n) => Math.max(0, (pjReal[n] || 0) - (enHistorial[n] || 0));
   const por = {}, totalTemp = {}, mejor = {};
   partidos.slice().sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
@@ -1628,17 +1629,17 @@ function calcularOnce(partidos, lunes) {
     const mvp = mvpDelPartido(p), gan = ganadorEquipo(p);
     (p.participantes || []).forEach(x => {
       if (!x || x.abandono) return;
-      totalTemp[x.name] = (totalTemp[x.name] || 0) + 1;
+      totalTemp[nomX(x)] = (totalTemp[nomX(x)] || 0) + 1;
       if (sem !== lunes) return;
-      const u = (por[x.name] = por[x.name] || []);
+      const u = (por[nomX(x)] = por[nomX(x)] || []);
       u.push({ x, p, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
       // La carta que tenía el jugador justo después de este partido (sus últimos 10 de la semana hasta ahora, SEGUIDOS)
       const ventana = u.slice(-N_ULTIMOS);
-      const a = atributosDeVentana(ventana, totalTemp[x.name] + extraPJ(x.name));
+      const a = atributosDeVentana(ventana, totalTemp[nomX(x)] + extraPJ(nomX(x)));
       a.ventana = ventana;                                                       // los partidos con los que se consiguió esta carta
       // Se queda la de mayor OVR; en empate, la de más suma de atributos (sin FIS) y, si sigue el empate, la más reciente
-      const s5 = (c) => c.tir + c.pas + c.rit + c.def + c.reg, m = mejor[x.name];
-      if (!m || a.ovr > m.ovr || (a.ovr === m.ovr && s5(a) >= s5(m))) mejor[x.name] = a;
+      const s5 = (c) => c.tir + c.pas + c.rit + c.def + c.reg, m = mejor[nomX(x)];
+      if (!m || a.ovr > m.ovr || (a.ovr === m.ovr && s5(a) >= s5(m))) mejor[nomX(x)] = a;
     });
   });
   const filas = Object.entries(por).map(([n, u]) => {
