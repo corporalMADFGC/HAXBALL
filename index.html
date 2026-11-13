@@ -172,10 +172,13 @@ td.name:hover .nm{text-decoration:underline}
 .pts-col{width:44px;display:flex;flex-direction:column;align-items:center;cursor:pointer;border-radius:10px;padding:0 2px 6px;outline:none}
 .pts-col:hover,.pts-col:focus-visible{background:var(--soft)}
 .pts-col.sel{background:var(--soft);box-shadow:inset 0 0 0 2px var(--line)}
-.pts-zona{height:140px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.pts-zona{height:196px;width:100%;display:flex;align-items:flex-end;justify-content:center}
 .pts-barra{position:relative;width:32px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 45%,transparent),color-mix(in srgb,var(--c) 4%,transparent))}
 .pts-barra .bd{position:absolute;top:0;left:0;right:0;padding:3px 0;border-radius:7px;background:var(--c);color:#fff;font-weight:800;font-size:.85rem;line-height:1.15;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .pts-sinpts{width:32px;padding-bottom:6px;text-align:center;font-size:1.1rem;color:var(--mut)}
+.pts-ico-in{position:absolute;left:0;right:0;bottom:4px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:.8rem;line-height:1.05;pointer-events:none}
+.pts-ico-in small{font-size:.6rem;font-weight:800;color:var(--ink);opacity:.7}
+.pts-ico-fuera{position:static;padding-bottom:4px}
 .am{--c:#f5c518}.am .bd{color:#2b2200}
 .ve{--c:#22a84a}
 .az{--c:#1e6fe0}
@@ -1064,32 +1067,11 @@ function abrirPuntosJugador(nombre) {
     else { cont.append(el("span", null, emoji), el("small", null, "×" + n)); }
   };
 
-  const ZONA = 140, MIN_BARRA = 26;
-  // alto del bloque de iconos = el de la columna que más iconos apila (así todas las etiquetas quedan alineadas)
+  // Los iconos van DENTRO de la barra (como en Mister), abajo del todo: así la zona de la gráfica gana altura para los puntos.
+  const ZONA = 190, MIN_BARRA = 26, FILA = 15, BADGE = 28;
   const nIconos = (n) => (n ? (n <= 4 ? n : 2) : 0);
-  const maxIconos = Math.max(0, ...datos.map(d => d.x.abandono ? 0 : nIconos(d.x.goals || 0) + nIconos(d.x.assists || 0) + nIconos(d.x.ownGoals || 0)));
-  const altoIconos = Math.max(34, maxIconos * 17 + 8);
+  const nFilas = (d) => d.x.abandono ? 0 : nIconos(d.x.goals || 0) + nIconos(d.x.assists || 0) + nIconos(d.x.ownGoals || 0);
   const maxPts = Math.max(10, ...datos.map(d => d.pts || 0));
-  const chart = $("pts-chart"); chart.textContent = "";
-  const detalle = $("pts-detalle");
-  const cols = [];
-
-  const seleccionar = (d, col) => {
-    cols.forEach(c => c.classList.remove("sel"));
-    col.classList.add("sel");
-    detalle.textContent = "";
-    const { p, x } = d;
-    detalle.append(el("span", "badge", (p.modalidad || "N/D").toUpperCase()));
-    detalle.append(el("span", "f", `P${d.n} · ${new Date(p.timestamp).toLocaleString()}`));
-    if (p.marcador) {
-      const m = el("span", "m"); m.append(el("span", "r", "Rojo " + p.marcador.red), document.createTextNode(" - "), el("span", "b", p.marcador.blue + " Azul"));
-      detalle.append(m);
-      if (x.abandono) detalle.append(el("span", "f", "Abandonó"));
-      else { const r = d.gan === 0 ? "e" : (d.gan === x.team ? "v" : "d"); detalle.append(el("span", "pts-res " + r, r === "v" ? "VICTORIA" : r === "d" ? "DERROTA" : "EMPATE")); }
-    }
-    detalle.append(el("span", "ga", `⚽ ${x.goals || 0}   🅰️ ${x.assists || 0}` + (x.ownGoals ? `   🥅 ${x.ownGoals} pp` : "")));
-    detalle.append(el("span", "pts-pill " + (d.pts != null ? claseBolaPuntos(d.pts) : "na"), d.pts != null ? fmtPts(d.pts) + " pts" : (x.abandono ? "Sin puntos (abandono)" : "Sin puntos en 1v1")));
-  };
 
   datos.forEach(d => {
     const col = el("div", "pts-col");
@@ -1098,20 +1080,22 @@ function abrirPuntosJugador(nombre) {
     col.title = `P${d.n} · ${(d.p.modalidad || "").toUpperCase()} · ${new Date(d.p.timestamp).toLocaleDateString()}`;
 
     const zona = el("div", "pts-zona");
+    const poner = (cont) => { if (!d.x.abandono) { iconos(cont, "⚽", d.x.goals || 0); iconos(cont, "🅰️", d.x.assists || 0); iconos(cont, "🥅", d.x.ownGoals || 0); } };
     if (d.pts != null) {
-      const h = d.pts <= 0 ? MIN_BARRA : Math.max(MIN_BARRA, Math.round((d.pts / maxPts) * ZONA));
+      const prop = d.pts <= 0 ? MIN_BARRA : Math.round((d.pts / maxPts) * ZONA);
+      const h = Math.min(ZONA, Math.max(MIN_BARRA, prop, nFilas(d) ? BADGE + nFilas(d) * FILA + 6 : 0));   // con iconos, la barra crece lo justo para contenerlos
       const barra = el("div", "pts-barra " + claseBolaPuntos(d.pts));
       barra.style.height = h + "px";
       barra.append(el("div", "bd", fmtPts(d.pts)));
+      const ico = el("div", "pts-ico-in"); poner(ico); if (ico.childNodes.length) barra.append(ico);
       zona.append(barra);
     } else {
-      zona.append(el("div", "pts-sinpts", d.x.abandono ? "⊘" : "–"));
+      const sin = el("div", "pts-sinpts", d.x.abandono ? "⊘" : "–");
+      const ico = el("div", "pts-ico-in pts-ico-fuera"); poner(ico);
+      zona.append(el("div", null)); zona.lastChild.append(sin, ico);
     }
-    const ico = el("div", "pts-ico");
-    ico.style.height = altoIconos + "px";
-    if (!d.x.abandono) { iconos(ico, "⚽", d.x.goals || 0); iconos(ico, "🅰️", d.x.assists || 0); iconos(ico, "🥅", d.x.ownGoals || 0); }
 
-    col.append(zona, ico, el("div", "pts-lbl", "P" + d.n), el("div", "pts-mod", d.p.modalidad || ""));
+    col.append(zona, el("div", "pts-lbl", "P" + d.n), el("div", "pts-mod", d.p.modalidad || ""));
     const sel = () => seleccionar(d, col);
     col.addEventListener("click", sel);
     col.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sel(); } });
