@@ -230,6 +230,16 @@ td.name:hover .nm{text-decoration:underline}
 .oc-btn-partidos:hover{filter:brightness(1.08)}
 .oc-btn-partidos[hidden]{display:none}
 #modal-once-partidos{z-index:1200}
+#modal-once-detalle{z-index:1300}
+#modal-pts{z-index:1400}
+.od-box{position:relative;width:min(560px,96vw);max-height:94vh;overflow-y:auto;border-radius:14px;padding-top:0}
+.od-box .close-btn{top:8px;right:8px;z-index:3}
+.od-cap{color:#f0b429;font-size:.74rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;text-align:center;padding:10px 40px 8px;background:#0d1624}
+.od-box .mcard{border-radius:0 0 14px 14px}
+.od-hint{text-align:center;color:#93a4ba;font-size:.68rem;padding:6px 8px;background:var(--card)}
+.op-fila{cursor:pointer}
+.op-fila:hover{background:rgba(255,255,255,.12)}
+.op-ir{font-size:.64rem;color:#f0b429;font-weight:800;margin-top:3px}
 .op-box{position:relative;width:min(440px,96vw);max-height:92vh;display:flex;flex-direction:column;background:#0d1624;color:#fff;border:1px solid #b07800;border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);overflow:hidden}
 .op-box .close-btn{top:10px;right:10px;z-index:3}
 .op-head{padding:14px 18px 12px;text-align:center;background:linear-gradient(135deg,#0b2a5b,#0f1b2d);border-bottom:1px solid rgba(240,180,41,.45)}
@@ -456,6 +466,15 @@ td.name:hover .nm{text-decoration:underline}
     </div>
     <div class="card-stats-grid" id="oc-info"></div>
     <button type="button" class="oc-btn-partidos" id="oc-btn-partidos" onclick="abrirPartidosOnce()" hidden>📋 Ver partidos</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-once-detalle" onclick="cerrarDetalleOnce()">
+  <div class="od-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Detalle del partido">
+    <button class="close-btn" onclick="cerrarDetalleOnce()" aria-label="Cerrar">✕</button>
+    <div class="od-cap">📊 Partido · puntos de todos los jugadores</div>
+    <div id="od-cont"></div>
+    <div class="od-hint">Toca un jugador para ver sus puntos por partido.</div>
   </div>
 </div>
 
@@ -1116,34 +1135,8 @@ function abrirPuntosJugador(nombre) {
 }
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { cerrarPuntos(); $("modal").classList.remove("active"); } });
 
-function pintarMatches() {
-  const filtroTexto = $("q").value.toLowerCase().trim();
-  const todos = partidosPeriodo();
-
-  // chips de modalidad
-  const mods = [];
-  todos.forEach(p => { if (p.modalidad && !mods.includes(p.modalidad)) mods.push(p.modalidad); });
-  mods.sort();
-  if (matchMod !== "todas" && !mods.includes(matchMod)) matchMod = "todas";
-  const chips = $("mod-chips"); chips.textContent = "";
-  ["todas", ...mods].forEach(m => {
-    const b = el("button", null, m === "todas" ? "Todas" : m.toUpperCase());
-    b.type = "button";
-    b.setAttribute("aria-pressed", String(m === matchMod));
-    b.addEventListener("click", () => { matchMod = m; matchLimit = 20; render(); });
-    chips.append(b);
-  });
-
-  const lista = todos.slice().reverse()
-    .filter(p => matchMod === "todas" || p.modalidad === matchMod)
-    .filter(p => !filtroTexto || (p.participantes || []).some(x => (x.name || "").toLowerCase().includes(filtroTexto)));
-
-  const grid = $("mgrid"); grid.textContent = "";
-  $("empty-m").hidden = lista.length > 0;
-  const visibles = lista.slice(0, matchLimit);
-  $("more").hidden = lista.length <= matchLimit;
-
-  visibles.forEach(partido => {
+// Tarjeta de un partido con los puntos de todos los jugadores (se usa en la pestaña Partidos y en el Once de la semana)
+function crearTarjetaPartido(partido) {
     const gan = ganadorEquipo(partido);
     const rMar = partido.marcador ? partido.marcador.red : null;
     const bMar = partido.marcador ? partido.marcador.blue : null;
@@ -1195,8 +1188,37 @@ function pintarMatches() {
       teams.append(col);
     });
     card.append(teams);
-    grid.append(card);
+  return card;
+}
+
+function pintarMatches() {
+  const filtroTexto = $("q").value.toLowerCase().trim();
+  const todos = partidosPeriodo();
+
+  // chips de modalidad
+  const mods = [];
+  todos.forEach(p => { if (p.modalidad && !mods.includes(p.modalidad)) mods.push(p.modalidad); });
+  mods.sort();
+  if (matchMod !== "todas" && !mods.includes(matchMod)) matchMod = "todas";
+  const chips = $("mod-chips"); chips.textContent = "";
+  ["todas", ...mods].forEach(m => {
+    const b = el("button", null, m === "todas" ? "Todas" : m.toUpperCase());
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(m === matchMod));
+    b.addEventListener("click", () => { matchMod = m; matchLimit = 20; render(); });
+    chips.append(b);
   });
+
+  const lista = todos.slice().reverse()
+    .filter(p => matchMod === "todas" || p.modalidad === matchMod)
+    .filter(p => !filtroTexto || (p.participantes || []).some(x => (x.name || "").toLowerCase().includes(filtroTexto)));
+
+  const grid = $("mgrid"); grid.textContent = "";
+  $("empty-m").hidden = lista.length > 0;
+  const visibles = lista.slice(0, matchLimit);
+  $("more").hidden = lista.length <= matchLimit;
+
+  visibles.forEach(partido => grid.append(crearTarjetaPartido(partido)));
 
   // Semanal/Mensual: el bot solo publica los últimos partidos; si hay más en el periodo, se avisa
   const per = esTemporada() ? null : periodoPublicado();
@@ -1760,10 +1782,12 @@ function abrirPartidosOnce() {
     if (x.recoveries) chips.push(`🛡️ ${x.recoveries}`);
     if (e.esMvp) chips.push("⭐ MVP");
     const fila = el("div", "op-fila r-" + res);
+    fila.title = "Ver el partido completo";
+    fila.addEventListener("click", () => abrirDetalleOnce(e.p));
     const info = el("div", "op-info");
     const marc = el("div", "op-marc", `${propio}-${rival}`);
     marc.append(el("small", "", String(e.p.modalidad || "")));
-    info.append(marc, el("div", "op-fecha", fmtHora.format(new Date(e.p.timestamp))));
+    info.append(marc, el("div", "op-fecha", fmtHora.format(new Date(e.p.timestamp))), el("div", "op-ir", "Ver partido completo ›"));
     const ch = el("div", "op-chips");
     if (chips.length) chips.forEach(c => ch.append(el("span", "op-chip", c))); else ch.append(el("span", "op-chip", "–"));
     fila.append(el("div", "op-res", res), info, ch);
@@ -1774,7 +1798,13 @@ function abrirPartidosOnce() {
   lista.scrollTop = 0;
   $("modal-once-partidos").classList.add("active");
 }
-function cerrarPartidosOnce() { $("modal-once-partidos").classList.remove("active"); }
+function abrirDetalleOnce(partido) {
+  const c = $("od-cont"); c.textContent = "";
+  c.append(crearTarjetaPartido(partido));
+  $("modal-once-detalle").classList.add("active");
+}
+function cerrarDetalleOnce() { $("modal-once-detalle").classList.remove("active"); }
+function cerrarPartidosOnce() { cerrarDetalleOnce(); $("modal-once-partidos").classList.remove("active"); }
 function cerrarCartaOnce() { cerrarPartidosOnce(); $("modal-once-carta").classList.remove("active"); }
 function abrirOnce() { onceKey = null; $("modal-once").classList.add("active"); pintarOnce(); }
 function cerrarOnce() { cerrarCartaOnce(); $("modal-once").classList.remove("active"); }
@@ -1787,6 +1817,8 @@ function onceIr(d) {
 }
 document.addEventListener("keydown", (e) => {
   if (!$("modal-once").classList.contains("active")) return;
+  if ($("modal-pts").classList.contains("active")) return;
+  if ($("modal-once-detalle").classList.contains("active")) { if (e.key === "Escape") cerrarDetalleOnce(); return; }
   if ($("modal-once-partidos").classList.contains("active")) { if (e.key === "Escape") cerrarPartidosOnce(); return; }
   if ($("modal-once-carta").classList.contains("active")) { if (e.key === "Escape") cerrarCartaOnce(); return; }
   if (e.key === "Escape") cerrarOnce();
