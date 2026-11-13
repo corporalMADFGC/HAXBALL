@@ -225,6 +225,15 @@ td.name:hover .nm{text-decoration:underline}
 .oc-det{position:relative;max-height:96vh;overflow-y:auto;overflow-x:hidden;padding:10px 6px 12px;display:flex;flex-direction:column;align-items:center}
 .oc-det .close-btn{top:6px;right:6px;z-index:3}
 .oc-cap{color:#f0b429;font-size:.74rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;text-align:center;margin:0 34px 8px}
+.oc-vent{width:320px;max-width:100%;margin:8px auto 0;color:#fff;background:rgba(0,0,0,.55);border-radius:8px;padding:8px;font-size:.7rem}
+.oc-vent[hidden]{display:none}
+.oc-vent-t{font-weight:800;color:#f0b429;margin-bottom:6px;text-align:center;line-height:1.25}
+.oc-vent-f{display:grid;grid-template-columns:20px 1fr auto;gap:6px;align-items:center;padding:3px 0;border-top:1px solid rgba(255,255,255,.1)}
+.oc-vent-r{text-align:center;border-radius:4px;font-weight:800;color:#0b1220;line-height:1.4}
+.oc-vent-r.r-V{background:#22c55e}.oc-vent-r.r-E{background:#94a3b8}.oc-vent-r.r-D{background:#ef4444}
+.oc-vent-c{min-width:0}
+.oc-vent-d{white-space:nowrap;font-weight:700}
+.oc-vent-n{margin-top:6px;color:#93a4ba;text-align:center;font-size:.64rem}
 .once-hueco{position:absolute;inset:0;border:.5cqw dashed rgba(255,255,255,.6);border-radius:2cqw;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);font-weight:800;font-size:3cqw;text-align:center;line-height:1.1;padding:1cqw}
 .once-vacio{padding:26px 14px;text-align:center;color:#93a4ba;font-size:.9rem}
 .once-pie{font-size:.72rem;color:#93a4ba;text-align:center;max-width:480px}
@@ -423,6 +432,7 @@ td.name:hover .nm{text-decoration:underline}
       </div>
     </div>
     <div class="card-stats-grid" id="oc-info"></div>
+    <div class="oc-vent" id="oc-ventana" hidden></div>
   </div>
 </div>
 
@@ -1547,6 +1557,15 @@ function semanasOnce(partidos) {
 
 function calcularOnce(partidos, lunes) {
   const orden = (a, b) => b.ovr - a.ovr || b.pj - a.pj || String(a.n).localeCompare(String(b.n));
+  // FIS: la carta normal usa los partidos jugados (PJ) reales del jugador. El historial puede no tenerlos todos (1v1, abandonos o
+  // partidos anteriores a que el bot guardase el detalle), así que la diferencia se suma a cada recuento: así el FIS del once
+  // coincide con el de la carta normal.
+  const pjReal = {}, enHistorial = {};
+  Object.values(dbActiva().jugadores || {}).forEach(j => {
+    pjReal[j.name] = (pjReal[j.name] || 0) + Object.values(j.modalidades || {}).reduce((s, m) => s + ((m && m.matches) || 0), 0);
+  });
+  partidos.forEach(p => (p.participantes || []).forEach(x => { if (x && !x.abandono) enHistorial[x.name] = (enHistorial[x.name] || 0) + 1; }));
+  const extraPJ = (n) => Math.max(0, (pjReal[n] || 0) - (enHistorial[n] || 0));
   const por = {}, totalTemp = {}, mejor = {};
   partidos.slice().sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
     const sem = lunesDe(diaClave(p.timestamp));
@@ -1557,10 +1576,14 @@ function calcularOnce(partidos, lunes) {
       totalTemp[x.name] = (totalTemp[x.name] || 0) + 1;
       if (sem !== lunes) return;
       const u = (por[x.name] = por[x.name] || []);
-      u.push({ x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
-      // La carta que tenía el jugador justo después de este partido (sus últimos 10 de la semana hasta ahora)
-      const a = atributosDeVentana(u.slice(-N_ULTIMOS), totalTemp[x.name]);
-      if (!mejor[x.name] || a.ovr >= mejor[x.name].ovr) mejor[x.name] = a;     // se queda la de mayor OVR (en empate, la más reciente)
+      u.push({ x, p, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      // La carta que tenía el jugador justo después de este partido (sus últimos 10 de la semana hasta ahora, SEGUIDOS)
+      const ventana = u.slice(-N_ULTIMOS);
+      const a = atributosDeVentana(ventana, totalTemp[x.name] + extraPJ(x.name));
+      a.ventana = ventana;                                                       // los partidos con los que se consiguió esta carta
+      // Se queda la de mayor OVR; en empate, la de más suma de atributos (sin FIS) y, si sigue el empate, la más reciente
+      const s5 = (c) => c.tir + c.pas + c.rit + c.def + c.reg, m = mejor[x.name];
+      if (!m || a.ovr > m.ovr || (a.ovr === m.ovr && s5(a) >= s5(m))) mejor[x.name] = a;
     });
   });
   const filas = Object.entries(por).map(([n, u]) => {
@@ -1671,7 +1694,38 @@ function abrirCartaOnce(f, posTxt) {
     <div>⭐ MVPs: ${f.mvp}</div>
     <div>🏅 Puntos: ${fmtPts(f.puntos)}</div>
   `;
+  pintarVentanaOnce(f);
   $("modal-once-carta").classList.add("active");
+}
+
+// Lista de los partidos seguidos con los que el jugador consiguió esa carta (los últimos 10 de la semana en ese momento)
+function pintarVentanaOnce(f) {
+  const cont = $("oc-ventana");
+  cont.textContent = "";
+  const v = f.ventana || [];
+  cont.hidden = !v.length;
+  if (!v.length) return;
+  const fmtHora = new Intl.DateTimeFormat("es-ES", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+  const ultimo = v[v.length - 1].p;
+  cont.append(el("div", "oc-vent-t", `Carta conseguida el ${fmtHora.format(new Date(ultimo.timestamp))} con ` +
+    (v.length >= N_ULTIMOS ? `estos ${v.length} partidos seguidos` : `sus ${v.length} partidos de la semana hasta ese momento`)));
+  v.forEach((e) => {
+    const m = e.p.marcador || {}, x = e.x;
+    const propio = x.team === 1 ? m.red : m.blue, rival = x.team === 1 ? m.blue : m.red;
+    const res = e.gano ? "V" : (m.red === m.blue ? "E" : "D");
+    const datos = [];
+    if (x.goals) datos.push(`⚽${x.goals}`);
+    if (x.assists) datos.push(`🅰️${x.assists}`);
+    if (x.saves) datos.push(`🧤${x.saves}`);
+    if (x.recoveries) datos.push(`🛡️${x.recoveries}`);
+    if (e.esMvp) datos.push("⭐");
+    const fila = el("div", "oc-vent-f");
+    fila.append(el("span", "oc-vent-r r-" + res, res),
+                el("span", "oc-vent-c", `${fmtHora.format(new Date(e.p.timestamp))} · ${String(e.p.modalidad || "").toUpperCase()} · ${propio}-${rival}`),
+                el("span", "oc-vent-d", datos.join(" ") || "–"));
+    cont.append(fila);
+  });
+  cont.append(el("div", "oc-vent-n", "Son partidos consecutivos de esa semana, no los 10 mejores."));
 }
 function cerrarCartaOnce() { $("modal-once-carta").classList.remove("active"); }
 function abrirOnce() { onceKey = null; $("modal-once").classList.add("active"); pintarOnce(); }
