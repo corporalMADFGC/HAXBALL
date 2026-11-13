@@ -1728,7 +1728,15 @@ function pintarOnce() {
 }
 
 function abrirCartaOnce(f, posTxt) {
-  const pct = f.pasesT > 0 ? Math.round((f.pasesC / f.pasesT) * 100) : 0;
+  // Estadísticas de los partidos con los que se consiguió la carta (la ventana de hasta 10), no las totales de la semana
+  const v = f.ventana || [];
+  const sv = (k) => v.reduce((t, e) => t + ((e.x && e.x[k]) || 0), 0);
+  const st = {
+    pj: v.length, vic: v.filter(e => e.gano).length, goles: sv("goals"), asis: sv("assists"), paradas: sv("saves"),
+    p0: v.filter(e => e.x && e.x.cleanSheet).length, robos: sv("recoveries"), pasesC: sv("passesCompleted"), pasesT: sv("passesTotal"),
+    mvp: v.filter(e => e.esMvp).length, puntos: v.reduce((t, e) => t + (e.x && typeof e.x.puntosMVP === "number" ? e.x.puntosMVP : 0), 0)
+  };
+  const pct = st.pasesT > 0 ? Math.round((st.pasesC / st.pasesT) * 100) : 0;
   $("oc-cap").textContent = `⭐ Once de la semana · ${fmtDiaLargo(onceKey)} – ${fmtDiaLargo(sumarDiasStr(onceKey, 6))}`;
   $("oc-fifa").className = "fifa-card " + claseTier(f.ovr);
   $("oc-ovr").textContent = f.ovr;
@@ -1738,16 +1746,17 @@ function abrirCartaOnce(f, posTxt) {
   $("oc-svg").innerHTML = generarSVGRomboPES(f);
   ["rit", "tir", "pas", "reg", "def", "fis"].forEach(k => { $("oc-" + k).textContent = f[k]; });
   $("oc-info").innerHTML = `
-    <div>🎮 PJ: ${f.pj}</div>
-    <div>🥇 Victorias: ${f.vic}</div>
-    <div>⚽ Goles: ${f.goles}</div>
-    <div>🅰️ Asistencias: ${f.asis}</div>
-    <div>🧤 Paradas: ${f.paradas}</div>
-    <div>🔒 Porterías 0: ${f.p0}</div>
-    <div>🛡️ Robos: ${f.robos}</div>
-    <div>👟 Pases: ${f.pasesT > 0 ? pct + "%" : "-"}</div>
-    <div>⭐ MVPs: ${f.mvp}</div>
-    <div>🏅 Puntos: ${fmtPts(f.puntos)}</div>
+    <div style="grid-column:1/-1;text-align:center;color:#f0b429;font-size:.68rem;letter-spacing:.4px;text-transform:uppercase">Estadísticas de ${st.pj >= N_ULTIMOS ? "estos " + st.pj + " partidos" : "sus " + st.pj + " partidos de la semana hasta ese momento"}</div>
+    <div>🎮 PJ: ${st.pj}</div>
+    <div>🥇 Victorias: ${st.vic}</div>
+    <div>⚽ Goles: ${st.goles}</div>
+    <div>🅰️ Asistencias: ${st.asis}</div>
+    <div>🧤 Paradas: ${st.paradas}</div>
+    <div>🔒 Porterías 0: ${st.p0}</div>
+    <div>🛡️ Robos: ${st.robos}</div>
+    <div>👟 Pases: ${st.pasesT > 0 ? pct + "%" : "-"}</div>
+    <div>⭐ MVPs: ${st.mvp}</div>
+    <div>🏅 Puntos: ${fmtPts(st.puntos)}</div>
   `;
   pintarVentanaOnce(f);
   $("modal-once-carta").classList.add("active");
