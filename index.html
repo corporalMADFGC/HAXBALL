@@ -1516,8 +1516,9 @@ function pintarEspeciales() {
 
 // ---------- ONCE DE LA SEMANA ----------
 // Semanas naturales (lunes a domingo, hora de España). La carta de cada jugador se calcula igual que la carta normal
-// (mismos atributos, últimos 10 partidos) pero SOLO con los partidos de esa semana (sin 1v1 ni abandonos); FIS usa los partidos de
-// toda la temporada hasta el final de esa semana. Formación 3-5-2:
+// (mismos atributos, últimos 10 partidos) pero SOLO con los partidos de esa semana (sin 1v1 ni abandonos). Se recalcula tras cada
+// partido de la semana y en el once entra su MEJOR carta (mayor OVR que llegó a tener; si empata, la más reciente). FIS usa los
+// partidos de toda la temporada hasta ese momento. Formación 3-5-2:
 //   1 POR (el DEF con mejor OVR) · 3 DEF · 3 MC (el mejor, de mediapunta) · 2 EXT (los extremos) · 2 DEL
 // Un jugador solo sale una vez. Si faltan jugadores de una posición, el hueco lo cubre el mejor del resto en el atributo de esa
 // posición (su carta sigue mostrando su posición real). Se exige un mínimo de partidos en la semana (si no hay 11 jugadores se baja).
@@ -1546,7 +1547,7 @@ function semanasOnce(partidos) {
 
 function calcularOnce(partidos, lunes) {
   const orden = (a, b) => b.ovr - a.ovr || b.pj - a.pj || String(a.n).localeCompare(String(b.n));
-  const por = {}, totalTemp = {};
+  const por = {}, totalTemp = {}, mejor = {};
   partidos.slice().sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
     const sem = lunesDe(diaClave(p.timestamp));
     if (sem > lunes) return;
@@ -1555,11 +1556,15 @@ function calcularOnce(partidos, lunes) {
       if (!x || x.abandono) return;
       totalTemp[x.name] = (totalTemp[x.name] || 0) + 1;
       if (sem !== lunes) return;
-      (por[x.name] = por[x.name] || []).push({ x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      const u = (por[x.name] = por[x.name] || []);
+      u.push({ x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      // La carta que tenía el jugador justo después de este partido (sus últimos 10 de la semana hasta ahora)
+      const a = atributosDeVentana(u.slice(-N_ULTIMOS), totalTemp[x.name]);
+      if (!mejor[x.name] || a.ovr >= mejor[x.name].ovr) mejor[x.name] = a;     // se queda la de mayor OVR (en empate, la más reciente)
     });
   });
   const filas = Object.entries(por).map(([n, u]) => {
-    const a = atributosDeVentana(u.slice(-N_ULTIMOS), totalTemp[n] || u.length);
+    const a = mejor[n];
     a.pos = asignarPosicion(a);
     const suma = (k) => u.reduce((s, e) => s + (e.x[k] || 0), 0);
     return { n, pj: u.length, goles: suma("goals"), asis: suma("assists"),
@@ -1641,7 +1646,7 @@ function pintarOnce() {
   if (!hay) { $("once-vacio").textContent = "Esta semana no hay partidos todavía."; $("once-pie").textContent = ""; return; }
   pitch.insertAdjacentHTML("beforeend", SVG_CAMPO);
   slots.forEach(s => pitch.append(cartaOnce(s)));
-  $("once-pie").textContent = "Cartas calculadas solo con los partidos de la semana (sin 1v1).";
+  $("once-pie").textContent = "Cada jugador aparece con la mejor carta que llegó a tener esa semana (calculada solo con partidos de la semana, sin 1v1).";
 }
 
 function abrirCartaOnce(f, posTxt) {
