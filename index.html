@@ -1455,12 +1455,13 @@ async function load() {
 // Pestaña GLOBAL: ignora periodo (diario/semanal/mensual) y modalidad. Usa todos los partidos de la temporada en curso (sin 1v1, como la carta normal).
 // Se recorre el historial de cada jugador partido a partido: tras cada partido (a partir del 10º) se calculan sus atributos con los últimos 10 partidos.
 // La primera vez que la media de 3 atributos entra en el rango de una carta, el jugador la gana (y la conserva) con la fecha de ese partido.
-//   DEL = REG + RIT + TIR · DEF = DEF + FIS + RIT · MC = PAS + FIS + RIT   (dividido entre 3)
+//   DEL = REG + RIT + TIR · DEF = DEF + FIS + RIT · MC = PAS + FIS + RIT · EXT = PAS + RIT + TIR   (dividido entre 3)
 // Rangos (el límite superior no entra): ICONO 95–99 · TOTY 90–95 · POTM 85–90.
 const ESP_POS = [
   { k: "del", t: "DELANTEROS", s: "DEL", e: "⚔️", attrs: ["reg", "rit", "tir"], lbl: ["REG", "RIT", "TIR"], nombre: "REG · RIT · TIR" },
   { k: "def", t: "DEFENSAS",   s: "DEF", e: "🛡️", attrs: ["def", "fis", "rit"], lbl: ["DEF", "FIS", "RIT"], nombre: "DEF · FIS · RIT" },
-  { k: "mc",  t: "MEDIOS",     s: "MC",  e: "🎯", attrs: ["pas", "fis", "rit"], lbl: ["PAS", "FIS", "RIT"], nombre: "PAS · FIS · RIT" }
+  { k: "mc",  t: "MEDIOS",     s: "MC",  e: "🎯", attrs: ["pas", "fis", "rit"], lbl: ["PAS", "FIS", "RIT"], nombre: "PAS · FIS · RIT" },
+  { k: "ext", t: "EXTREMOS",   s: "EXT", e: "⚡", attrs: ["pas", "rit", "tir"], lbl: ["PAS", "RIT", "TIR"], nombre: "PAS · RIT · TIR" }
 ];
 const ESP_TIPOS = [
   { k: "icono", t: "Cartas Icono", e: "👑", marca: "👑", min: 95, max: 100, texto: "95 – 99", sub: "Las leyendas" },
@@ -1489,7 +1490,7 @@ function listaEspeciales() {
   Object.values(dbGlobal.jugadores || {}).forEach(j => { if (j && j.name) avatares[j.name] = j.avatar || j.name.substring(0, 2).toUpperCase(); });
 
   const res = {};
-  ESP_TIPOS.forEach(t => { res[t.k] = { del: [], def: [], mc: [] }; });
+  ESP_TIPOS.forEach(t => { res[t.k] = { del: [], def: [], mc: [], ext: [] }; });
   mapa.forEach((lista, nombre) => {
     const ganadas = new Set();                                   // "tipo|pos": solo cuenta la primera vez
     for (let i = N_ULTIMOS - 1; i < lista.length; i++) {
