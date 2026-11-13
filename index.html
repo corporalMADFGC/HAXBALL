@@ -225,8 +225,31 @@ td.name:hover .nm{text-decoration:underline}
 .oc-det{position:relative;max-height:96vh;overflow-y:auto;overflow-x:hidden;padding:10px 6px 12px;display:flex;flex-direction:column;align-items:center}
 .oc-det .close-btn{top:6px;right:6px;z-index:3}
 .oc-cap{color:#f0b429;font-size:.74rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;text-align:center;margin:0 34px 8px}
-.oc-vent{width:320px;max-width:100%;margin:8px auto 0;color:#fff;background:rgba(0,0,0,.55);border-radius:8px;padding:8px;font-size:.7rem}
-.oc-vent[hidden]{display:none}
+.oc-det>.fifa-card,.oc-det>.card-stats-grid,.oc-det>.oc-btn-partidos{flex:0 0 auto}
+.oc-btn-partidos{width:320px;max-width:100%;margin:10px auto 0;padding:11px 14px;border:2px solid #f0b429;border-radius:10px;background:linear-gradient(135deg,#f7d774,#f0b429 55%,#c98a12);color:#3b2a00;font-weight:800;font-size:.9rem;letter-spacing:.4px;cursor:pointer;box-shadow:0 2px 8px rgba(240,180,41,.35)}
+.oc-btn-partidos:hover{filter:brightness(1.08)}
+.oc-btn-partidos[hidden]{display:none}
+#modal-once-partidos{z-index:1200}
+.op-box{position:relative;width:min(440px,96vw);max-height:92vh;display:flex;flex-direction:column;background:#0d1624;color:#fff;border:1px solid #b07800;border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.6);overflow:hidden}
+.op-box .close-btn{top:10px;right:10px;z-index:3}
+.op-head{padding:14px 18px 12px;text-align:center;background:linear-gradient(135deg,#0b2a5b,#0f1b2d);border-bottom:1px solid rgba(240,180,41,.45)}
+.op-head h3{margin:0 34px 4px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem;line-height:1.05;text-transform:uppercase;letter-spacing:1.5px;color:#f0b429}
+.op-head small{display:block;color:#cfd8e6;font-size:.75rem}
+.op-resumen{display:flex;justify-content:center;gap:8px;padding:10px 12px 4px}
+.op-resumen span{padding:3px 10px;border-radius:999px;font-weight:800;font-size:.78rem;color:#0b1220}
+.op-resumen .r-V{background:#22c55e}.op-resumen .r-E{background:#94a3b8}.op-resumen .r-D{background:#ef4444}
+.op-lista{padding:8px 12px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+.op-fila{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.06);border-left:4px solid #94a3b8}
+.op-fila.r-V{border-left-color:#22c55e}.op-fila.r-D{border-left-color:#ef4444}
+.op-res{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#0b1220;background:#94a3b8}
+.op-fila.r-V .op-res{background:#22c55e}.op-fila.r-D .op-res{background:#ef4444}
+.op-info{min-width:0}
+.op-marc{font-size:1.15rem;font-weight:900;line-height:1.1}
+.op-marc small{font-size:.68rem;font-weight:700;color:#93a4ba;margin-left:6px;text-transform:uppercase}
+.op-fecha{font-size:.7rem;color:#93a4ba;margin-top:2px}
+.op-chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:130px}
+.op-chip{background:rgba(0,0,0,.45);border-radius:6px;padding:2px 6px;font-size:.74rem;font-weight:800;white-space:nowrap}
+.op-pie{padding:0 12px 12px;text-align:center;color:#93a4ba;font-size:.68rem}
 .oc-vent-t{font-weight:800;color:#f0b429;margin-bottom:6px;text-align:center;line-height:1.25}
 .oc-vent-f{display:grid;grid-template-columns:20px 1fr auto;gap:6px;align-items:center;padding:3px 0;border-top:1px solid rgba(255,255,255,.1)}
 .oc-vent-r{text-align:center;border-radius:4px;font-weight:800;color:#0b1220;line-height:1.4}
@@ -432,7 +455,17 @@ td.name:hover .nm{text-decoration:underline}
       </div>
     </div>
     <div class="card-stats-grid" id="oc-info"></div>
-    <div class="oc-vent" id="oc-ventana" hidden></div>
+    <button type="button" class="oc-btn-partidos" id="oc-btn-partidos" onclick="abrirPartidosOnce()" hidden>📋 Ver partidos</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-once-partidos" onclick="cerrarPartidosOnce()">
+  <div class="op-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="op-titulo">
+    <button class="close-btn" onclick="cerrarPartidosOnce()" aria-label="Cerrar">✕</button>
+    <div class="op-head"><h3 id="op-titulo">Partidos de la carta</h3><small id="op-sub"></small></div>
+    <div class="op-resumen" id="op-resumen"></div>
+    <div class="op-lista" id="op-lista"></div>
+    <div class="op-pie">Son partidos consecutivos de esa semana, no los 10 mejores.</div>
   </div>
 </div>
 
@@ -1699,35 +1732,50 @@ function abrirCartaOnce(f, posTxt) {
 }
 
 // Lista de los partidos seguidos con los que el jugador consiguió esa carta (los últimos 10 de la semana en ese momento)
+let ocVentana = [], ocNombre = "";
 function pintarVentanaOnce(f) {
-  const cont = $("oc-ventana");
-  cont.textContent = "";
-  const v = f.ventana || [];
-  cont.hidden = !v.length;
+  ocVentana = f.ventana || [];
+  ocNombre = f.n;
+  $("oc-btn-partidos").hidden = !ocVentana.length;
+}
+function abrirPartidosOnce() {
+  const v = ocVentana;
   if (!v.length) return;
   const fmtHora = new Intl.DateTimeFormat("es-ES", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
   const ultimo = v[v.length - 1].p;
-  cont.append(el("div", "oc-vent-t", `Carta conseguida el ${fmtHora.format(new Date(ultimo.timestamp))} con ` +
-    (v.length >= N_ULTIMOS ? `estos ${v.length} partidos seguidos` : `sus ${v.length} partidos de la semana hasta ese momento`)));
+  $("op-titulo").textContent = `Partidos de ${ocNombre}`;
+  $("op-sub").textContent = `Carta conseguida el ${fmtHora.format(new Date(ultimo.timestamp))} con ` +
+    (v.length >= N_ULTIMOS ? `estos ${v.length} partidos seguidos` : `sus ${v.length} partidos de la semana hasta ese momento`);
+  const lista = $("op-lista"); lista.textContent = "";
+  const cuenta = { V: 0, E: 0, D: 0 };
   v.forEach((e) => {
     const m = e.p.marcador || {}, x = e.x;
     const propio = x.team === 1 ? m.red : m.blue, rival = x.team === 1 ? m.blue : m.red;
     const res = e.gano ? "V" : (m.red === m.blue ? "E" : "D");
-    const datos = [];
-    if (x.goals) datos.push(`⚽${x.goals}`);
-    if (x.assists) datos.push(`🅰️${x.assists}`);
-    if (x.saves) datos.push(`🧤${x.saves}`);
-    if (x.recoveries) datos.push(`🛡️${x.recoveries}`);
-    if (e.esMvp) datos.push("⭐");
-    const fila = el("div", "oc-vent-f");
-    fila.append(el("span", "oc-vent-r r-" + res, res),
-                el("span", "oc-vent-c", `${fmtHora.format(new Date(e.p.timestamp))} · ${String(e.p.modalidad || "").toUpperCase()} · ${propio}-${rival}`),
-                el("span", "oc-vent-d", datos.join(" ") || "–"));
-    cont.append(fila);
+    cuenta[res]++;
+    const chips = [];
+    if (x.goals) chips.push(`⚽ ${x.goals}`);
+    if (x.assists) chips.push(`🅰️ ${x.assists}`);
+    if (x.saves) chips.push(`🧤 ${x.saves}`);
+    if (x.recoveries) chips.push(`🛡️ ${x.recoveries}`);
+    if (e.esMvp) chips.push("⭐ MVP");
+    const fila = el("div", "op-fila r-" + res);
+    const info = el("div", "op-info");
+    const marc = el("div", "op-marc", `${propio}-${rival}`);
+    marc.append(el("small", "", String(e.p.modalidad || "")));
+    info.append(marc, el("div", "op-fecha", fmtHora.format(new Date(e.p.timestamp))));
+    const ch = el("div", "op-chips");
+    if (chips.length) chips.forEach(c => ch.append(el("span", "op-chip", c))); else ch.append(el("span", "op-chip", "–"));
+    fila.append(el("div", "op-res", res), info, ch);
+    lista.append(fila);
   });
-  cont.append(el("div", "oc-vent-n", "Son partidos consecutivos de esa semana, no los 10 mejores."));
+  const rs = $("op-resumen"); rs.textContent = "";
+  [["V", "victorias"], ["E", "empates"], ["D", "derrotas"]].forEach(([k, t]) => { if (cuenta[k]) rs.append(el("span", "r-" + k, `${cuenta[k]} ${t}`)); });
+  lista.scrollTop = 0;
+  $("modal-once-partidos").classList.add("active");
 }
-function cerrarCartaOnce() { $("modal-once-carta").classList.remove("active"); }
+function cerrarPartidosOnce() { $("modal-once-partidos").classList.remove("active"); }
+function cerrarCartaOnce() { cerrarPartidosOnce(); $("modal-once-carta").classList.remove("active"); }
 function abrirOnce() { onceKey = null; $("modal-once").classList.add("active"); pintarOnce(); }
 function cerrarOnce() { cerrarCartaOnce(); $("modal-once").classList.remove("active"); }
 function onceIr(d) {
@@ -1739,6 +1787,7 @@ function onceIr(d) {
 }
 document.addEventListener("keydown", (e) => {
   if (!$("modal-once").classList.contains("active")) return;
+  if ($("modal-once-partidos").classList.contains("active")) { if (e.key === "Escape") cerrarPartidosOnce(); return; }
   if ($("modal-once-carta").classList.contains("active")) { if (e.key === "Escape") cerrarCartaOnce(); return; }
   if (e.key === "Escape") cerrarOnce();
   else if (e.key === "ArrowLeft") onceIr(-1);
