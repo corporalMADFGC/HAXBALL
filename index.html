@@ -1073,6 +1073,27 @@ function abrirPuntosJugador(nombre) {
   const nFilas = (d) => d.x.abandono ? 0 : nIconos(d.x.goals || 0) + nIconos(d.x.assists || 0) + nIconos(d.x.ownGoals || 0);
   const maxPts = Math.max(10, ...datos.map(d => d.pts || 0));
 
+  const chart = $("pts-chart"); chart.textContent = "";
+  const detalle = $("pts-detalle");
+  const cols = [];
+
+  const seleccionar = (d, col) => {
+    cols.forEach(c => c.classList.remove("sel"));
+    col.classList.add("sel");
+    detalle.textContent = "";
+    const { p, x } = d;
+    detalle.append(el("span", "badge", (p.modalidad || "N/D").toUpperCase()));
+    detalle.append(el("span", "f", `P${d.n} · ${new Date(p.timestamp).toLocaleString()}`));
+    if (p.marcador) {
+      const m = el("span", "m"); m.append(el("span", "r", "Rojo " + p.marcador.red), document.createTextNode(" - "), el("span", "b", p.marcador.blue + " Azul"));
+      detalle.append(m);
+      if (x.abandono) detalle.append(el("span", "f", "Abandonó"));
+      else { const r = d.gan === 0 ? "e" : (d.gan === x.team ? "v" : "d"); detalle.append(el("span", "pts-res " + r, r === "v" ? "VICTORIA" : r === "d" ? "DERROTA" : "EMPATE")); }
+    }
+    detalle.append(el("span", "ga", `⚽ ${x.goals || 0}   🅰️ ${x.assists || 0}` + (x.ownGoals ? `   🥅 ${x.ownGoals} pp` : "")));
+    detalle.append(el("span", "pts-pill " + (d.pts != null ? claseBolaPuntos(d.pts) : "na"), d.pts != null ? fmtPts(d.pts) + " pts" : (x.abandono ? "Sin puntos (abandono)" : "Sin puntos en 1v1")));
+  };
+
   datos.forEach(d => {
     const col = el("div", "pts-col");
     col.tabIndex = 0;
