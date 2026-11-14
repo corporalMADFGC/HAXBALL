@@ -1589,7 +1589,8 @@ function pintarEspeciales() {
 // ---------- ONCE DE LA SEMANA ----------
 // Semanas naturales (lunes a domingo, hora de España). La carta de cada jugador se calcula igual que la carta normal
 // (mismos atributos, últimos 10 partidos) pero SOLO con los partidos de esa semana (sin 1v1 ni abandonos). Se recalcula tras cada
-// partido de la semana y en el once entra su MEJOR carta (mayor OVR que llegó a tener; si empata, la más reciente). FIS usa los
+// partido de la semana y en el once entra su MEJOR carta (mayor OVR que llegó a tener; si empata, la más reciente). Si el puesto de esa
+// carta ya está lleno, entra con su mejor carta de otro puesto donde sí quepa (se reparte por OVR, de mayor a menor). FIS usa los
 // partidos de toda la temporada hasta ese momento. Formación 3-5-2:
 //   1 POR (el DEF con mejor OVR) · 3 DEF · 3 MC (el mejor, de mediapunta) · 2 EXT (los extremos) · 2 DEL
 // Un jugador solo sale una vez. Si faltan jugadores de una posición, el hueco lo cubre el mejor del resto en el atributo de esa
@@ -1628,7 +1629,8 @@ function calcularOnce(partidos, lunes) {
   });
   partidos.forEach(p => (p.participantes || []).forEach(x => { if (x && !x.abandono) enHistorial[nomX(x)] = (enHistorial[nomX(x)] || 0) + 1; }));
   const extraPJ = (n) => Math.max(0, (pjReal[n] || 0) - (enHistorial[n] || 0));
-  const por = {}, totalTemp = {}, mejor = {};
+  const s5 = (c) => c.tir + c.pas + c.rit + c.def + c.reg;                       // desempate: suma de atributos (sin FIS)
+  const por = {}, totalTemp = {}, mejor = {}, mejorPos = {};
   partidos.slice().sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
     const sem = lunesDe(diaClave(p.timestamp));
     if (sem > lunes) return;
@@ -1644,26 +1646,33 @@ function calcularOnce(partidos, lunes) {
       const a = atributosDeVentana(ventana, totalTemp[nomX(x)] + extraPJ(nomX(x)));
       a.ventana = ventana;                                                       // los partidos con los que se consiguió esta carta
       // Se queda la de mayor OVR; en empate, la de más suma de atributos (sin FIS) y, si sigue el empate, la más reciente
-      const s5 = (c) => c.tir + c.pas + c.rit + c.def + c.reg, m = mejor[nomX(x)];
-      if (!m || a.ovr > m.ovr || (a.ovr === m.ovr && s5(a) >= s5(m))) mejor[nomX(x)] = a;
+      const nom = nomX(x), mejorQue = (c, m) => !m || c.ovr > m.ovr || (c.ovr === m.ovr && s5(c) >= s5(m));
+      a.pos = asignarPosicion(a);                                                // puesto que tenía el jugador con esta carta
+      if (mejorQue(a, mejor[nom])) mejor[nom] = a;                               // su mejor carta de la semana, sea del puesto que sea
+      const mp = (mejorPos[nom] = mejorPos[nom] || {});                          // y su mejor carta en CADA puesto (por si la mejor no le cabe)
+      if (mejorQue(a, mp[a.pos])) mp[a.pos] = a;
     });
   });
   const filas = Object.entries(por).map(([n, u]) => {
-    const a = mejor[n];
-    a.pos = asignarPosicion(a);
     const suma = (k) => u.reduce((s, e) => s + (e.x[k] || 0), 0);
     return { n, pj: u.length, goles: suma("goals"), asis: suma("assists"),
              vic: u.filter(e => e.gano).length, mvp: u.filter(e => e.esMvp).length, paradas: suma("saves"), robos: suma("recoveries"),
              p0: u.filter(e => e.x.cleanSheet).length, pasesC: suma("passesCompleted"), pasesT: suma("passesTotal"),
-             puntos: u.reduce((s, e) => s + (typeof e.x.puntosMVP === "number" ? e.x.puntosMVP : 0), 0), ...a };
+             puntos: u.reduce((s, e) => s + (typeof e.x.puntosMVP === "number" ? e.x.puntosMVP : 0), 0), ...mejor[n] };
   });
   let q = filas;
   for (let m = ONCE_MIN_PARTIDOS; m >= 1; m--) { q = filas.filter(f => f.pj >= m); if (q.length >= 11) break; }
 
-  const usados = new Set(), grupos = {};
-  ONCE_GRUPOS.forEach(([pos, cuantos]) => {                                  // 1) cada posición con sus jugadores de esa posición
-    grupos[pos] = q.filter(f => f.pos === pos).sort(orden).slice(0, cuantos);
-    grupos[pos].forEach(f => usados.add(f.n));
+  // 1) Se reparten los puestos por OVR: se prueban todas las cartas (una por jugador y puesto) de mejor a peor. Una carta entra si su
+  //    puesto aún tiene sitio y el jugador no está ya colocado; así, si su mejor carta es de un puesto lleno (p. ej. extremo), entra
+  //    con su mejor carta de otro puesto donde sí quepa (p. ej. defensa) en lugar de quedarse fuera.
+  const usados = new Set(), grupos = {}, cupo = {};
+  ONCE_GRUPOS.forEach(([pos, cuantos]) => { grupos[pos] = []; cupo[pos] = cuantos; });
+  const candidatas = [];
+  q.forEach(f => Object.values(mejorPos[f.n] || {}).forEach(c => candidatas.push({ ...f, ...c })));
+  candidatas.sort(orden).forEach(c => {
+    if (usados.has(c.n) || grupos[c.pos].length >= cupo[c.pos]) return;
+    grupos[c.pos].push(c); usados.add(c.n);
   });
   ONCE_GRUPOS.forEach(([pos, cuantos, attr]) => {                            // 2) huecos: el mejor del resto en el atributo de la posición
     if (grupos[pos].length >= cuantos) return;
@@ -1731,7 +1740,7 @@ function pintarOnce() {
   if (!hay) { $("once-vacio").textContent = "Esta semana no hay partidos todavía."; $("once-pie").textContent = ""; return; }
   pitch.insertAdjacentHTML("beforeend", SVG_CAMPO);
   slots.forEach(s => pitch.append(cartaOnce(s)));
-  $("once-pie").textContent = "Cada jugador aparece con la mejor carta que llegó a tener esa semana (calculada solo con partidos de la semana, sin 1v1).";
+  $("once-pie").textContent = "Cada jugador aparece con la mejor carta que llegó a tener esa semana en el puesto donde entra (calculada solo con partidos de la semana, sin 1v1).";
 }
 
 function abrirCartaOnce(f, posTxt) {
