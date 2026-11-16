@@ -145,6 +145,32 @@ td.name:hover .nm{text-decoration:underline}
 .fifa-card.t-plata,.once-card.t-plata{--c-borde:linear-gradient(160deg,#7d8794,#4a525c);--c-fondo:linear-gradient(170deg,#f2f4f7 0%,#cfd5dc 45%,#a9b1bb 100%);--c-txt:#2e3640;--c-linea:rgba(46,54,64,.45);--c-av:#2e3640;--c-av-borde:#f2f4f7}
 .fifa-card.t-bronce,.once-card.t-bronce{--c-borde:linear-gradient(160deg,#6b3f1d,#43250d);--c-fondo:linear-gradient(170deg,#e6b98c 0%,#c98a55 45%,#a8693a 100%);--c-txt:#4a2810;--c-linea:rgba(74,40,16,.45);--c-av:#4a2810;--c-av-borde:#e6b98c}
 .fifa-note{text-align:center;font-size:.55rem;opacity:.65;margin-top:6px}
+/* ---- Carta que se da la vuelta: reverso con los partidos ---- */
+.flip-scene{width:320px;height:440px;margin:0 auto;perspective:1100px;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+.flip-card{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.4,.15,.2,1)}
+.flip-card.volteada{transform:rotateY(180deg)}
+.flip-card>.fifa-card{position:absolute;inset:0;margin:0;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.flip-card>.fifa-back{transform:rotateY(180deg)}
+.flip-scene:focus-visible .flip-card>.fifa-card:not(.fifa-back){outline:2px solid #f0b429}
+.flip-hint{text-align:center;font-size:.68rem;color:rgba(255,255,255,.6);margin:6px 0 0;letter-spacing:.3px}
+.oc-det>.flip-scene,.oc-det>.flip-hint{flex:0 0 auto}
+.fifa-back .fifa-inner{padding:20px 16px 32px;align-items:stretch}
+.fb-tit{text-align:center;font-weight:800;font-size:.78rem;letter-spacing:.6px;text-transform:uppercase;line-height:1.15}
+.fb-tit small{display:block;font-weight:600;font-size:.58rem;opacity:.75;letter-spacing:.3px;margin-top:1px}
+.fb-cab,.fb-fila{display:grid;grid-template-columns:22px 44px repeat(6,1fr);align-items:center;column-gap:3px}
+.fb-cab{margin:7px 0 3px;padding-bottom:3px;border-bottom:1px solid var(--c-linea);font-size:.78rem;text-align:center}
+.fb-lista{flex:1;display:flex;flex-direction:column;gap:2px;min-height:0}
+.fb-fila{height:27px;font-size:.78rem;font-weight:800;text-align:center;border-radius:6px;background:rgba(255,255,255,.14);opacity:0}
+.fb-fila .fb-r{width:20px;height:20px;line-height:20px;border-radius:50%;font-size:.68rem;font-weight:900;color:#fff;margin-left:1px}
+.fb-fila.r-V .fb-r{background:#1fa855}.fb-fila.r-E .fb-r{background:#8a929c}.fb-fila.r-D .fb-r{background:#d1384a}
+.fb-fila .fb-m{font-size:.76rem;line-height:1}
+.fb-fila .fb-m small{display:block;font-size:.5rem;font-weight:600;opacity:.7;margin-top:1px}
+.fb-fila .fb-0{opacity:.3;font-weight:600}
+.fb-fila .fb-mvp{font-size:.6rem;vertical-align:top}
+.flip-card.volteada .fb-fila{animation:fbEntra .42s cubic-bezier(.2,.8,.3,1) both;animation-delay:calc(.5s + var(--i) * .2s)}
+@keyframes fbEntra{0%{opacity:0;transform:translateX(26px) scale(.96)}100%{opacity:1;transform:none}}
+.fb-vacio{margin:auto;text-align:center;font-size:.78rem;opacity:.8;padding:0 10px}
+@media (prefers-reduced-motion:reduce){.flip-card{transition-duration:.01s}.flip-card.volteada .fb-fila{animation-duration:.01s;animation-delay:0s}}
 #modal .card-stats-grid,#modal-oc .card-stats-grid{width:320px;margin:10px auto 0;color:#fff;background:rgba(0,0,0,.55);font-size:.72rem;gap:3px 8px}
 .pes-hexagon-container{display:flex;justify-content:center;align-items:center;margin:8px 0}
 .card-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;font-weight:bold;background:rgba(255,255,255,0.3);padding:8px;border-radius:8px}
@@ -375,6 +401,7 @@ td.name:hover .nm{text-decoration:underline}
   <div style="position:relative" onclick="event.stopPropagation()">
     <button class="close-btn" onclick="$('modal').classList.remove('active')">✕</button>
     <div class="vtabs"><button type="button" aria-selected="true">💎 Perfil</button><button type="button" aria-selected="false" onclick="verPuntos()">📊 Puntos</button></div>
+    <div class="flip-scene" id="flip-main" tabindex="0" role="button" aria-label="Girar la carta para ver los partidos"><div class="flip-card">
     <div class="fifa-card">
       <div class="fifa-inner">
         <div class="fifa-top">
@@ -399,6 +426,8 @@ td.name:hover .nm{text-decoration:underline}
         </div>
       </div>
     </div>
+    </div></div>
+    <div class="flip-hint">👆 Toca la carta para girarla</div>
     <div class="card-stats-grid" id="card-info"></div>
   </div>
 </div>
@@ -445,6 +474,7 @@ td.name:hover .nm{text-decoration:underline}
   <div class="oc-det" id="modal-oc" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Carta del jugador en el once de la semana">
     <button class="close-btn" onclick="cerrarCartaOnce()" aria-label="Cerrar">✕</button>
     <div class="oc-cap" id="oc-cap">⭐ Once de la semana</div>
+    <div class="flip-scene" id="flip-once" tabindex="0" role="button" aria-label="Girar la carta para ver los partidos"><div class="flip-card">
     <div class="fifa-card" id="oc-fifa">
       <div class="fifa-inner">
         <div class="fifa-top">
@@ -467,6 +497,8 @@ td.name:hover .nm{text-decoration:underline}
         </div>
       </div>
     </div>
+    </div></div>
+    <div class="flip-hint">👆 Toca la carta para girarla</div>
     <div class="card-stats-grid" id="oc-info"></div>
     <button type="button" class="oc-btn-partidos" id="oc-btn-partidos" onclick="abrirPartidosOnce()" hidden>📋 Ver partidos</button>
   </div>
@@ -728,7 +760,7 @@ function indicePartidosPorJugador() {
     (p.participantes || []).forEach(x => {
       if (!x || x.abandono) return;
       if (!mapa.has(nomX(x))) mapa.set(nomX(x), []);
-      mapa.get(nomX(x)).push({ mod: p.modalidad, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      mapa.get(nomX(x)).push({ mod: p.modalidad, p, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
     });
   });
   indiceCache = { ref: hist, len: hist.length, mapa };
@@ -881,6 +913,7 @@ function obtenerVistaJugador(p, modo) {
   r.puntos = Math.round(r.puntos * 100) / 100;
   if (!r.matches && !r.goals && !r.wins) return null;
   r.name = p.name;
+  r.modo = modo;
   r.avatar = p.avatar || p.name.substring(0, 2).toUpperCase();
   
   const calc = calcularAtributosPES(r, p.name, modo);
@@ -991,8 +1024,63 @@ function abrirCarta(p) {
     <div>⭐ MVPs: ${p.mvp}</div>
     <div>🏅 Puntos: ${fmtPts(p.puntos || 0)}</div>
   `;
+  prepararReverso($("flip-main"), p.ventanaCarta || ultimosPartidos(p.name, p.modo || "total"), p.name);
   $("modal").classList.add("active");
 }
+
+// ---------- Reverso de la carta: los (hasta) 10 partidos con los que se consiguió, uno a uno ----------
+function prepararReverso(scene, ventana, nombre) {
+  const girar = scene.querySelector(".flip-card");
+  const frente = girar.querySelector(".fifa-card:not(.fifa-back)");
+  girar.classList.remove("volteada");
+  let dorso = girar.querySelector(".fifa-back");
+  if (!dorso) { dorso = el("div", "fifa-card fifa-back"); girar.append(dorso); }
+  dorso.className = frente.className + " fifa-back";           // mismo color/tier que el frente
+  dorso.textContent = "";
+  const inn = el("div", "fifa-inner");
+  const tit = el("div", "fb-tit", String(nombre).toUpperCase());
+  tit.append(el("small", "", ventana.length ? `Últimos ${ventana.length} partidos de esta carta` : "Sin partidos"));
+  inn.append(tit);
+  if (!ventana.length) {
+    inn.append(el("div", "fb-vacio", "Todavía no hay partidos registrados con esta carta."));
+  } else {
+    const cab = el("div", "fb-cab");
+    ["", "", "⚽", "🅰️", "🛡️", "🧤", "🌀", "🔥"].forEach((t, i) => { const c = el("span", "", t); if (i === 0) c.title = ""; cab.append(c); });
+    cab.children[2].title = "Goles"; cab.children[3].title = "Asistencias"; cab.children[4].title = "Robos";
+    cab.children[5].title = "Paradas"; cab.children[6].title = "Regates"; cab.children[7].title = "Racha de victorias";
+    inn.append(cab);
+    const lista = el("div", "fb-lista");
+    let racha = 0;
+    ventana.forEach((e, i) => {
+      const x = e.x || {}, m = (e.p && e.p.marcador) || null;
+      const res = e.gano ? "V" : (m && m.red === m.blue ? "E" : "D");
+      racha = e.gano ? racha + 1 : 0;
+      const fila = el("div", "fb-fila r-" + res);
+      fila.style.setProperty("--i", i);
+      fila.append(el("span", "fb-r", res));
+      const propio = m ? (x.team === 1 ? m.red : m.blue) : null, rival = m ? (x.team === 1 ? m.blue : m.red) : null;
+      const marc = el("span", "fb-m", m ? `${propio}-${rival}` : "–");
+      marc.append(el("small", "", String((e.p && e.p.modalidad) || e.mod || "")));
+      fila.append(marc);
+      const vals = [x.goals, x.assists, x.recoveries, x.saves, x.autopases, racha];
+      vals.forEach((v, j) => {
+        const c = el("span", (v || 0) === 0 ? "fb-0" : "", String(v || 0));
+        if (j === 0 && e.esMvp) c.append(el("span", "fb-mvp", "⭐"));
+        fila.append(c);
+      });
+      fila.title = m ? `${res === "V" ? "Victoria" : res === "E" ? "Empate" : "Derrota"} ${propio}-${rival}` + (e.esMvp ? " · MVP" : "") : "";
+      lista.append(fila);
+    });
+    inn.append(lista);
+  }
+  dorso.append(inn);
+}
+function alternarCarta(scene) { scene.querySelector(".flip-card").classList.toggle("volteada"); }
+["flip-main", "flip-once"].forEach(id => {
+  const sc = document.getElementById(id);
+  sc.addEventListener("click", () => alternarCarta(sc));
+  sc.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alternarCarta(sc); } });
+});
 
 function valorOrden(v, k) { const x = v[k]; return (x == null ? -1 : x); }
 function etiquetaOrden(k) { const o = SORT_OPTS.find(o => o.k === k); return o ? o.t : k; }
@@ -1483,7 +1571,7 @@ function listaEspeciales() {
     (p.participantes || []).forEach(x => {
       if (!x || x.abandono) return;
       if (!mapa.has(nomX(x))) mapa.set(nomX(x), []);
-      mapa.get(nomX(x)).push({ ts: p.timestamp, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
+      mapa.get(nomX(x)).push({ ts: p.timestamp, p, x, esMvp: mvp === x, gano: gan !== 0 && x.team === gan });
     });
   });
   const avatares = {};
@@ -1500,7 +1588,7 @@ function listaEspeciales() {
         const tipo = ESP_TIPOS.find(t => media >= t.min && media < t.max);
         if (!tipo || ganadas.has(tipo.k + "|" + pos.k)) return;
         ganadas.add(tipo.k + "|" + pos.k);
-        res[tipo.k][pos.k].push({ nombre, avatar: avatares[nombre] || nombre.substring(0, 2).toUpperCase(), w, media, ts: lista[i].ts });
+        res[tipo.k][pos.k].push({ nombre, avatar: avatares[nombre] || nombre.substring(0, 2).toUpperCase(), w, media, ts: lista[i].ts, ventana: lista.slice(i - N_ULTIMOS + 1, i + 1) });
       });
     }
   });
@@ -1515,6 +1603,7 @@ function abrirCartaEspecial(tipo, pos, item) {
   const v = derivar(Object.assign(base ? { ...base } : { matches: 0, wins: 0, goals: 0, assists: 0, ownGoals: 0, saves: 0, cleanSheets: 0, passesTotal: 0, passesCompleted: 0, recoveries: 0, mvp: 0, puntos: 0, autopases: 0, streak: 0, bestStreak: 0, elo: 1000 }, { name: item.nombre, avatar: item.avatar }));
   v.pes = { ...item.w, pos: pos.s, tendencia: null };
   v.ovr = Math.round(item.media);
+  v.ventanaCarta = item.ventana || [];
   abrirCarta(v);
   document.querySelector("#modal .fifa-card").className = "fifa-card t-" + tipo.k;
   $("card-note").textContent = `${tipo.t.toUpperCase()} · conseguida el ${fmtFechaEsp(item.ts)} · media de 3 atributos en 10 partidos`;
@@ -1775,6 +1864,7 @@ function abrirCartaOnce(f, posTxt) {
     <div>🏅 Puntos: ${fmtPts(st.puntos)}</div>
   `;
   pintarVentanaOnce(f);
+  prepararReverso($("flip-once"), f.ventana || [], f.n);
   $("modal-once-carta").classList.add("active");
 }
 
