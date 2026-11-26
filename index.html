@@ -690,16 +690,18 @@ async function cargarLiga() {
   } catch (e) { ligaDb = null; }
 }
 function ligaEq(k) { return (ligaDb.equipos || []).find(e => e.k === k) || { k, n: k, a: k.slice(0, 3).toUpperCase(), col: "#64748b" }; }
-const LIGA_RUTA_ESCUDOS = "escudos/";      // carpeta junto a index.html con un PNG por equipo: barca.png, madrid.png, ... (si falta, se ve la bolita de color)
+const LIGA_RUTA_ESCUDOS = "escudos/";      // carpeta junto a index.html con una imagen por equipo: barca.png, madrid.png, ... (png, webp, jpg o svg; si falta, bolita de color)
 function ligaEscudo(k) {
   const e = ligaEq(k), c = (e.col || "#64748b").replace("#", "");
   const lum = (parseInt(c.slice(0, 2), 16) * 299 + parseInt(c.slice(2, 4), 16) * 587 + parseInt(c.slice(4, 6), 16) * 114) / 1000;
   const s = el("span", "lg-esc lg-img");
   const img = document.createElement("img");
   img.alt = e.n; img.loading = "lazy";
-  img.src = LIGA_RUTA_ESCUDOS + k + ".png";
-  img.addEventListener("error", () => {      // sin escudo: círculo de color con las siglas
-    s.classList.remove("lg-img"); s.textContent = e.a; s.style.background = e.col; s.style.color = lum > 150 ? "#111" : "#fff";
+  const exts = ["png", "PNG", "webp", "WEBP", "jpg", "JPG", "jpeg", "JPEG", "svg", "SVG"]; let n = 0;
+  img.src = LIGA_RUTA_ESCUDOS + k + "." + exts[0];
+  img.addEventListener("error", () => {
+    if (++n < exts.length) { img.src = LIGA_RUTA_ESCUDOS + k + "." + exts[n]; return; }   // prueba otras extensiones
+    s.classList.remove("lg-img"); s.textContent = e.a; s.style.background = e.col; s.style.color = lum > 150 ? "#111" : "#fff";   // sin escudo: círculo con las siglas
   });
   s.append(img);
   return s;
