@@ -36,6 +36,53 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(1.8r
 .time-bar button.tab-temp[aria-selected=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--blue)}
 .time-bar button.tab-partidos[aria-selected=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--red)}
 
+/* LA LIGA */
+.time-bar button.tab-liga{background:#16a34a!important;border-color:#16a34a!important;color:#fff!important}
+.time-bar button.tab-liga[aria-selected=false]{opacity:.7}
+.time-bar button.tab-liga[aria-selected=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px #16a34a}
+#liga-view{margin-top:4px}
+.lg-head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.lg-head b{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem}
+.lg-head span{font-size:.85rem;font-weight:700;color:var(--mut)}
+.lg-sub,.lg-nav{display:flex;gap:6px;align-items:center;margin-bottom:12px}
+.lg-sub button,.lg-nav button{font-size:.85rem;font-weight:600;padding:6px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;cursor:pointer}
+.lg-sub button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.lg-nav{justify-content:center}.lg-nav button:disabled{opacity:.35;cursor:default}.lg-nav b{min-width:190px;text-align:center}
+.lg-esc{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:30px;height:30px;border-radius:50%;font-size:.6rem;font-weight:800;border:1px solid rgba(0,0,0,.15)}
+.lg-wrap{--lg-head:#e6e8ec;--lg-alt:#f1f2f4;--lg-row:#fff;--lg-pos:#1b2a5e;--lg-txt:#6b7280;--lg-name:#111827;background:var(--lg-row);border:1px solid var(--line);border-radius:4px;overflow-x:auto}
+@media(prefers-color-scheme:dark){.lg-wrap{--lg-head:#1d2d46;--lg-alt:#17263c;--lg-row:#142033;--lg-pos:#9db8ff;--lg-txt:#a9b6c8;--lg-name:#e8eef6}}
+table.lg-t{min-width:640px;font-size:.9rem;border-collapse:collapse;width:100%}
+.lg-t th,.lg-t td{text-align:center;padding:0 8px;height:48px;border:0;white-space:nowrap}
+.lg-t th{background:var(--lg-head);color:var(--lg-name);font-weight:800;font-size:.95rem;height:46px;letter-spacing:.2px}
+.lg-t td{color:var(--lg-txt);background:var(--lg-row)}
+.lg-t tbody tr:nth-child(even) td{background:var(--lg-alt)}
+.lg-t tbody tr:hover td{background:var(--lg-head)}
+.lg-t th:nth-child(2),.lg-t td:nth-child(2){text-align:center}
+.lg-t td.lg-zona{width:34px;padding:0 0 0 0;text-align:center;box-shadow:inset 5px 0 0 var(--z,transparent)}
+.lg-t td.lg-zona i{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border:1px solid var(--lg-txt);border-radius:50%;font-size:.55rem;font-style:normal;color:var(--lg-txt);margin-left:6px}
+.lg-t td.lg-pos{color:var(--lg-pos);font-weight:800;font-size:1rem;width:90px}
+.lg-t th.lg-eqh,.lg-t td.lg-eq{text-align:left}
+.lg-t th.lg-eqh{text-align:center}
+.lg-t td.lg-eq{padding-left:30px;min-width:260px}
+.lg-t td.lg-eq .lg-eqn{gap:12px;color:var(--lg-name);font-weight:800;font-size:.72rem;text-transform:uppercase;letter-spacing:.2px}
+.lg-t td.lg-pts{font-weight:400;color:var(--lg-txt)}
+.lg-esc.lg-img{background:none!important;border:0;border-radius:0}
+.lg-esc img{display:block;width:100%;height:100%;object-fit:contain}
+.lg-t .lg-esc{width:24px;height:24px}
+.lg-zleyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--mut);margin:10px 2px}
+.lg-zleyenda span{display:inline-flex;align-items:center;gap:6px}.lg-zleyenda i{width:5px;height:14px;display:inline-block;background:var(--z)}
+.lg-eqn{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.lg-nota{font-size:.78rem;color:var(--mut);margin:8px 2px}
+.lg-partidos{display:grid;gap:8px}
+.lg-match{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.lg-lado{display:flex;align-items:center;gap:8px;font-weight:600;min-width:0}.lg-lado span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lg-vis{flex-direction:row-reverse;text-align:right}
+.lg-score{text-align:center;min-width:84px}.lg-score b{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.6rem;line-height:1.1}.lg-score small{font-size:.68rem;color:var(--mut)}
+.lg-aporta{grid-column:1/-1;font-size:.72rem;color:var(--mut);border-top:1px dashed var(--line);padding-top:6px}
+.lg-cmds{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.lg-cmds summary{cursor:pointer;font-weight:700}
+.lg-cmdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;margin-top:10px}.lg-cmd{display:flex;align-items:center;gap:8px;font-size:.85rem}
+@media(max-width:560px){.lg-match{grid-template-columns:1fr auto 1fr;padding:8px}.lg-lado span:last-child{font-size:.78rem;white-space:normal}.lg-nav b{min-width:0}}
+
 /* BARRA DE CONTROLES */
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
 .bar input{flex:1;min-width:150px;font-size:.85rem;padding:7px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px}
@@ -389,6 +436,8 @@ td.name:hover .nm{text-decoration:underline}
 
   <div id="especiales-view" hidden></div>
 
+  <div id="liga-view" hidden></div>
+
   <div id="matches-view" hidden>
     <div class="chips" id="mod-chips"></div>
     <div class="mgrid" id="mgrid"></div>
@@ -596,8 +645,10 @@ function pintarTiempo() {
     b.addEventListener("click", onClick);
     cont.append(b);
   };
-  const enEsp = tab === "especiales";     // pestaña global: sin Diario/Semanal/Mensual ni temporadas cerradas
-  boton("🏆 Temporada " + temporadaNum, tiempoFiltro === "temp1" && !enEsp, () => { if (tab === "especiales") tab = "total"; elegirTiempo("temp1"); }, "tab-temp");
+  const enLiga = tab === "liga";
+  const enEsp = tab === "especiales" || enLiga;     // pestañas globales: sin Diario/Semanal/Mensual ni temporadas cerradas
+  boton("🏆 Temporada " + temporadaNum, tiempoFiltro === "temp1" && !enEsp, () => { if (tab === "especiales" || tab === "liga") tab = "total"; elegirTiempo("temp1"); }, "tab-temp");
+  boton("⚽ LA LIGA", enLiga, () => { tab = "liga"; render(); }, "tab-liga");
   boton("🔴 PARTIDOS", tab === "partidos", () => { tab = "partidos"; matchLimit = 20; render(); }, "tab-partidos");
   boton("💎 CARTAS ESPECIALES", tab === "especiales", () => { tab = "especiales"; render(); }, "tab-esp");
   if (!enEsp) {
@@ -614,6 +665,7 @@ function pintarTiempo() {
 }
 
 function pintarCuenta() {
+  const lc = $("liga-cuenta"); if (lc && ligaDb) lc.textContent = ligaTextoResta();
   const c = $("countdown");
   const resta = temporadaFin - Date.now();
   const fecha = new Date(temporadaFin).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Madrid" });
@@ -627,6 +679,128 @@ function pintarCuenta() {
     c.className = "countdown fin";
     c.textContent = `🏁 La Temporada ${temporadaNum} terminó el ${fecha}. Esperando el reinicio.`;
   }
+}
+
+// ---------- LA LIGA (liga.json lo publica el bot) ----------
+let ligaDb = null, ligaSub = "clasificacion", ligaJornadaSel = null, ligaJornadaUlt = null;
+async function cargarLiga() {
+  try {
+    const r = await fetch("liga.json?t=" + Date.now());
+    ligaDb = r.ok ? await r.json() : null;
+  } catch (e) { ligaDb = null; }
+}
+function ligaEq(k) { return (ligaDb.equipos || []).find(e => e.k === k) || { k, n: k, a: k.slice(0, 3).toUpperCase(), col: "#64748b" }; }
+const LIGA_RUTA_ESCUDOS = "escudos/";      // carpeta junto a index.html con un PNG por equipo: barca.png, madrid.png, ... (si falta, se ve la bolita de color)
+function ligaEscudo(k) {
+  const e = ligaEq(k), c = (e.col || "#64748b").replace("#", "");
+  const lum = (parseInt(c.slice(0, 2), 16) * 299 + parseInt(c.slice(2, 4), 16) * 587 + parseInt(c.slice(4, 6), 16) * 114) / 1000;
+  const s = el("span", "lg-esc lg-img");
+  const img = document.createElement("img");
+  img.alt = e.n; img.loading = "lazy";
+  img.src = LIGA_RUTA_ESCUDOS + k + ".png";
+  img.addEventListener("error", () => {      // sin escudo: círculo de color con las siglas
+    s.classList.remove("lg-img"); s.textContent = e.a; s.style.background = e.col; s.style.color = lum > 150 ? "#111" : "#fff";
+  });
+  s.append(img);
+  return s;
+}
+function ligaGoles(pts) { return Math.floor((+pts || 0) / (ligaDb.ptsPorGol || 100)); }
+function ligaTextoResta() {
+  const resta = ligaDb.fin - Date.now();
+  if (ligaDb.terminada) return "🏆 La Liga ha terminado";
+  if (resta <= 0) return "⏳ Cerrando la jornada…";
+  const s = Math.floor(resta / 1000), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  return `⏳ La jornada termina en ${d}d ${h}h ${m}m (domingo 23:59)`;
+}
+function pintarLiga() {
+  const cont = $("liga-view"); cont.textContent = "";
+  if (!ligaDb) { cont.append(el("div", "empty", "La Liga aún no ha empezado: el bot todavía no ha publicado liga.json.")); return; }
+  const jug = ligaDb.jornada, total = ligaDb.totalJornadas || 38;
+  if (ligaJornadaSel == null || ligaJornadaUlt !== jug) { ligaJornadaSel = Math.min(jug, total); ligaJornadaUlt = jug; }
+
+  const cab = el("div", "lg-head");
+  cab.append(el("b", null, ligaDb.terminada ? "⚽ LA LIGA · Finalizada" : `⚽ LA LIGA · Jornada ${jug} de ${total}`));
+  const cuenta = el("span", null, ligaTextoResta()); cuenta.id = "liga-cuenta"; cab.append(cuenta);
+  cont.append(cab);
+
+  const sub = el("div", "lg-sub");
+  [["clasificacion", "📊 Clasificación"], ["jornadas", "📅 Jornadas"]].forEach(([k, t]) => {
+    const b = el("button", null, t); b.type = "button"; b.setAttribute("aria-selected", String(ligaSub === k));
+    b.addEventListener("click", () => { ligaSub = k; pintarLiga(); });
+    sub.append(b);
+  });
+  cont.append(sub);
+  if (ligaSub === "clasificacion") pintarLigaTabla(cont); else pintarLigaJornadas(cont);
+
+  const det = el("details", "lg-cmds");
+  det.append(el("summary", null, "Comandos de equipo (escríbelos en la sala)"));
+  const g = el("div", "lg-cmdgrid");
+  (ligaDb.equipos || []).forEach(e => { const f = el("div", "lg-cmd"); f.append(ligaEscudo(e.k), el("span", null, `${e.cmd} · ${e.n}`)); g.append(f); });
+  det.append(g, el("p", "lg-nota", `Cada ${ligaDb.ptsPorGol || 100} puntos que sumen los jugadores de un equipo = 1 gol. Gana la jornada el equipo con más goles (3 pts; empate 1 pt). En la sala, !equipos muestra esta lista.`));
+  cont.append(det);
+}
+function pintarLigaTabla(cont) {
+  const filas = (ligaDb.equipos || []).map(e => ({ k: e.k, ...(ligaDb.tabla[e.k] || {}) }));
+  filas.sort((a, b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf || ligaEq(a.k).n.localeCompare(ligaEq(b.k).n, "es"));
+  const ZONAS = { champ: ["#1b2a8f", "Champions League"], europa: ["#f97316", "Europa League"], conf: ["#16a34a", "Conference League"], desc: ["#dc2626", "Descenso"] };
+  const zonaDe = (i) => i < 5 ? "champ" : i === 5 ? "europa" : i === 6 ? "conf" : i >= filas.length - 3 ? "desc" : null;
+  const wrap = el("div", "lg-wrap"), t = el("table", "lg-t");
+  const th = el("thead"), trh = el("tr");
+  [["", ""], ["POSICIÓN", ""], ["EQUIPO", "lg-eqh"], ["PUNTOS", ""], ["PJ", ""], ["PG", ""], ["PE", ""], ["PP", ""], ["GF", ""], ["GC", ""], ["DG", ""]]
+    .forEach(([h, c]) => trh.append(el("th", c || null, h)));
+  th.append(trh); t.append(th);
+  const tb = el("tbody");
+  filas.forEach((f, i) => {
+    const tr = el("tr");
+    const z = zonaDe(i), tdz = el("td", "lg-zona");
+    if (z) { tdz.style.setProperty("--z", ZONAS[z][0]); tdz.title = ZONAS[z][1]; }
+    tdz.append(el("i", null, "?"));
+    tr.append(tdz, el("td", "lg-pos", String(i + 1)));
+    const td = el("td", "lg-eq"), n = el("span", "lg-eqn");
+    n.append(ligaEscudo(f.k), el("span", null, ligaEq(f.k).n));
+    n.title = `${(ligaDb.jugadores || {})[f.k] || 0} jugador(es) con este equipo`;
+    td.append(n); tr.append(td);
+    const dg = (f.gf || 0) - (f.gc || 0);
+    [f.pts, f.pj, f.g, f.e, f.p, f.gf, f.gc, (dg > 0 ? "+" : "") + dg].forEach((v, j) => tr.append(el("td", j === 0 ? "lg-pts" : null, String(v || 0))));
+    tb.append(tr);
+  });
+  t.append(tb); wrap.append(t); cont.append(wrap);
+  const ley = el("div", "lg-zleyenda");
+  Object.values(ZONAS).forEach(([col, nom]) => { const sp = el("span"); const i = el("i"); i.style.setProperty("--z", col); sp.append(i, document.createTextNode(nom)); ley.append(sp); });
+  cont.append(ley);
+}
+function pintarLigaJornadas(cont) {
+  const total = ligaDb.totalJornadas || 38, sel = ligaJornadaSel;
+  const nav = el("div", "lg-nav");
+  const prev = el("button", null, "◀"), next = el("button", null, "▶");
+  prev.type = next.type = "button";
+  prev.disabled = sel <= 1; next.disabled = sel >= total;
+  prev.addEventListener("click", () => { ligaJornadaSel--; pintarLiga(); });
+  next.addEventListener("click", () => { ligaJornadaSel++; pintarLiga(); });
+  const estado = sel < ligaDb.jornada || (ligaDb.terminada && sel <= total) ? "Finalizada" : sel === ligaDb.jornada ? "En juego" : "Pendiente";
+  nav.append(prev, el("b", null, `Jornada ${sel} · ${estado}`), next);
+  cont.append(nav);
+
+  const cerrada = (ligaDb.resultados || []).find(r => r.j === sel);
+  const enJuego = !cerrada && sel === ligaDb.jornada && !ligaDb.terminada;
+  const partidos = cerrada ? cerrada.partidos : (ligaDb.calendario[sel - 1] || []).map(([l, v]) => ({ l, v }));
+  const lista = el("div", "lg-partidos");
+  partidos.forEach(m => {
+    const pl = cerrada ? m.pl : (enJuego ? (ligaDb.puntos[m.l] || 0) : null), pv = cerrada ? m.pv : (enJuego ? (ligaDb.puntos[m.v] || 0) : null);
+    const gl = cerrada ? m.gl : (pl == null ? null : ligaGoles(pl)), gv = cerrada ? m.gv : (pv == null ? null : ligaGoles(pv));
+    const fila = el("div", "lg-match");
+    const lado = (k, cls) => { const d = el("div", "lg-lado " + cls); d.append(ligaEscudo(k), el("span", null, ligaEq(k).n)); return d; };
+    const centro = el("div", "lg-score");
+    centro.append(el("b", null, gl == null ? "vs" : `${gl} - ${gv}`));
+    if (pl != null) centro.append(el("small", null, `${Math.round(pl)} - ${Math.round(pv)} pts`));
+    fila.append(lado(m.l, "lg-loc"), centro, lado(m.v, "lg-vis"));
+    if (enJuego) {
+      const ap = [m.l, m.v].map(k => (ligaDb.aportes[k] || []).map(x => `${x.name} ${Math.round(x.pts)}`).join(", ")).map((t, i) => t ? `${ligaEq([m.l, m.v][i]).a}: ${t}` : "").filter(Boolean).join("  ·  ");
+      if (ap) fila.append(el("div", "lg-aporta", ap));
+    }
+    lista.append(fila);
+  });
+  cont.append(lista);
 }
 
 function cambiarOrden(k) { sortKey = k; sortDir = -1; render(); }
@@ -1341,15 +1515,17 @@ function render() {
   pintarCuenta();
   pintarTabs();
   const esPartidos = tab === "partidos";
+  const esLiga = tab === "liga";
   const esEsp = tab === "especiales";
   if (esPartidos || esEsp) pedirPartidos();
-  $("sort-ctl").style.display = (esPartidos || esEsp) ? "none" : "flex";
-  $("search-bar").style.display = esEsp ? "none" : "";
-  $("wrap-ranking").hidden = esPartidos || esEsp;
-  $("podium").hidden = esPartidos || esEsp;
+  $("sort-ctl").style.display = (esPartidos || esEsp || esLiga) ? "none" : "flex";
+  $("search-bar").style.display = (esEsp || esLiga) ? "none" : "";
+  $("wrap-ranking").hidden = esPartidos || esEsp || esLiga;
+  $("podium").hidden = esPartidos || esEsp || esLiga;
   $("matches-view").hidden = !esPartidos;
   $("especiales-view").hidden = !esEsp;
-  $("tabs").hidden = esEsp;
+  $("liga-view").hidden = !esLiga;
+  $("tabs").hidden = esEsp || esLiga;
 
   // selector de orden (se rellena una vez)
   const sel = $("sortKey");
@@ -1365,6 +1541,12 @@ function render() {
   if (esPartidos) {
     pintarKpis(datosJugadores.length);
     pintarMatches();
+    return;
+  }
+  if (esLiga) {
+    pintarKpis(datosJugadores.length);
+    pintarLiga();
+    $("sub").textContent = cargando ? "Cargando…" : "La Liga · independiente de la temporada";
     return;
   }
   if (esEsp) {
@@ -1531,6 +1713,7 @@ async function load() {
     console.error("Error al cargar stats.json:", e);
   }
   cargando = false;
+  await cargarLiga();
   await cargarPartidos(dbGlobal.total);
   aplicarPartidos();
   await cargarArchivos();
