@@ -929,13 +929,23 @@ function abrirRankingEquipo(k) {
   $("modal-lg").classList.add("active");
 }
 function pintarLigaGoleadores(cont) {
+  // Una fila por jugador y equipo (si ha marcado con varios equipos, sale una vez con cada uno).
+  // Solo entran los que llevan al menos 1 gol, y solo se muestran los goles (sin puntos).
   const filas = [];
-  Object.entries(ligaTotales()).forEach(([k, t]) => Object.entries(t).forEach(([nom, pts]) => filas.push({ k, nom, pts })));
-  filas.sort((a, b) => b.pts - a.pts || a.nom.localeCompare(b.nom, "es"));
-  cont.append(el("p", "lg-nota", `Máximos goleadores de La Liga: cada ${ligaDb.ptsPorGol || 100} puntos aportados a su equipo = ⚽.`));
+  Object.entries(ligaTotales()).forEach(([k, t]) => Object.entries(t).forEach(([nom, pts]) => {
+    const goles = ligaGoles(pts);
+    if (goles >= 1) filas.push({ k, nom, goles });
+  }));
+  filas.sort((a, b) => b.goles - a.goles || a.nom.localeCompare(b.nom, "es"));
+  cont.append(el("p", "lg-nota", "Máximos goleadores de La Liga. Si un jugador ha marcado con varios equipos, aparece una vez con cada uno."));
   const box = el("div", "lg-gol");
-  if (!filas.length) box.append(el("div", "lgm-vacio", "Todavía nadie ha sumado puntos en La Liga."));
-  else filas.forEach((f, i) => box.append(ligaFilaRanking(i, f.nom, f.pts, f.k)));
+  if (!filas.length) box.append(el("div", "lgm-vacio", "Todavía nadie ha marcado ningún gol en La Liga."));
+  else filas.forEach((f, i) => {
+    const fila = el("div", "lgm-j"), n = el("div", "lgm-nom");
+    n.append(ligaEscudo(f.k), el("span", null, f.nom));
+    fila.append(el("span", "lgm-pos", String(i + 1)), n, el("b", null, `${f.goles}⚽`));
+    box.append(fila);
+  });
   cont.append(box);
 }
 function cerrarPartidoLiga() { $("modal-lg").classList.remove("active"); }
