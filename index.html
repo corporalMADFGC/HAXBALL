@@ -78,7 +78,25 @@ table.lg-t{min-width:640px;font-size:.9rem;border-collapse:collapse;width:100%}
 .lg-lado{display:flex;align-items:center;gap:8px;font-weight:600;min-width:0}.lg-lado span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lg-vis{flex-direction:row-reverse;text-align:right}
 .lg-score{text-align:center;min-width:84px}.lg-score b{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.6rem;line-height:1.1}.lg-score small{font-size:.68rem;color:var(--mut)}
-.lg-aporta{grid-column:1/-1;font-size:.72rem;color:var(--mut);border-top:1px dashed var(--line);padding-top:6px}
+.lg-match.lg-click{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.lg-match.lg-click:hover,.lg-match.lg-click:focus-visible{border-color:var(--blue);box-shadow:0 2px 10px rgba(30,91,184,.18);outline:none}
+#modal-lg{z-index:1450}
+.lgm-box{position:relative;width:min(620px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.5);overflow:hidden}
+.lgm-box .close-btn{top:10px;right:10px;z-index:3}
+.lgm-head{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:18px 16px 14px;background:linear-gradient(135deg,#0b2a5b,#1e5bb8);color:#fff}
+.lgm-eq{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-weight:700;font-size:.9rem;min-width:0}
+.lgm-eq .lg-esc{width:42px;height:42px}
+.lgm-mid{text-align:center}.lgm-mid b{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.4rem;line-height:1}
+.lgm-mid small{font-size:.7rem;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+.lgm-cols{display:grid;grid-template-columns:1fr 1fr;overflow-y:auto}
+.lgm-col{padding:10px 12px 14px;min-width:0}.lgm-col+.lgm-col{border-left:1px solid var(--line)}
+.lgm-col h4{margin:0 0 8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);display:flex;justify-content:space-between;gap:6px}
+.lgm-j{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:7px 2px;border-bottom:1px solid var(--line);font-size:.88rem}
+.lgm-j:last-child{border-bottom:0}
+.lgm-j span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lgm-j b{white-space:nowrap;font-size:.85rem}
+.lgm-vacio{font-size:.8rem;color:var(--mut);padding:8px 2px}
+@media(max-width:480px){.lgm-cols{grid-template-columns:1fr}.lgm-col+.lgm-col{border-left:0;border-top:1px solid var(--line)}}
 .lg-cmds{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.lg-cmds summary{cursor:pointer;font-weight:700}
 .lg-cmdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;margin-top:10px}.lg-cmd{display:flex;align-items:center;gap:8px;font-size:.85rem}
 @media(max-width:560px){.lg-match{grid-template-columns:1fr auto 1fr;padding:8px}.lg-lado span:last-child{font-size:.78rem;white-space:normal}.lg-nav b{min-width:0}}
@@ -500,6 +518,14 @@ td.name:hover .nm{text-decoration:underline}
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-lg" onclick="cerrarPartidoLiga()">
+  <div class="lgm-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Resumen del partido">
+    <button class="close-btn" onclick="cerrarPartidoLiga()" aria-label="Cerrar">✕</button>
+    <div class="lgm-head" id="lgm-head"></div>
+    <div class="lgm-cols" id="lgm-cols"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-once" onclick="cerrarOnce()">
   <div class="once-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="once-titulo">
     <button class="close-btn" onclick="cerrarOnce()" aria-label="Cerrar">✕</button>
@@ -796,14 +822,55 @@ function pintarLigaJornadas(cont) {
     centro.append(el("b", null, gl == null ? "vs" : `${gl} - ${gv}`));
     if (pl != null) centro.append(el("small", null, `${Math.round(pl)} - ${Math.round(pv)} pts`));
     fila.append(lado(m.l, "lg-loc"), centro, lado(m.v, "lg-vis"));
-    if (enJuego) {
-      const ap = [m.l, m.v].map(k => (ligaDb.aportes[k] || []).map(x => `${x.name} ${Math.round(x.pts)}`).join(", ")).map((t, i) => t ? `${ligaEq([m.l, m.v][i]).a}: ${t}` : "").filter(Boolean).join("  ·  ");
-      if (ap) fila.append(el("div", "lg-aporta", ap));
+    if (pl != null) {          // partido jugado o en juego: al pinchar se abre el resumen de puntos por jugador
+      fila.classList.add("lg-click"); fila.tabIndex = 0; fila.setAttribute("role", "button");
+      fila.title = "Ver puntos de los jugadores";
+      const abrir = () => abrirPartidoLiga(m, { pl, pv, gl, gv, cerrada: !!cerrada, jornada: sel });
+      fila.addEventListener("click", abrir);
+      fila.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); } });
     }
     lista.append(fila);
   });
   cont.append(lista);
 }
+
+// Resumen de un partido de Liga: jugadores que han sumado puntos para cada equipo.
+// Cada 100 pts (ptsPorGol) = ⚽ → 134 pts se muestra "⚽ + 34 pts".
+function ligaFmtAporte(pts) {
+  const porGol = ligaDb.ptsPorGol || 100, n = Math.round(+pts || 0);
+  const goles = Math.floor(n / porGol), resto = n - goles * porGol;
+  if (!goles) return `${resto} pts`;
+  return "⚽".repeat(goles) + (resto ? ` + ${resto} pts` : "");
+}
+function ligaAportesDe(m, k, lado, cerrada) {
+  // Jornada en juego: ligaDb.aportes[equipo]. Jornadas cerradas: el bot puede guardarlos en el partido
+  // (m.aportes[equipo], o m.al / m.av). Si no los guardó, no hay detalle.
+  let lista = null;
+  if (m.aportes && m.aportes[k]) lista = m.aportes[k];
+  else if (lado === "l" && m.al) lista = m.al;
+  else if (lado === "v" && m.av) lista = m.av;
+  else if (!cerrada) lista = (ligaDb.aportes || {})[k] || [];
+  return lista ? lista.filter(x => (+x.pts || 0) > 0).slice().sort((a, b) => b.pts - a.pts) : null;
+}
+function abrirPartidoLiga(m, d) {
+  const head = $("lgm-head"), cols = $("lgm-cols"); head.textContent = ""; cols.textContent = "";
+  const eq = (k) => { const x = el("div", "lgm-eq"); x.append(ligaEscudo(k), el("span", null, ligaEq(k).n)); return x; };
+  const mid = el("div", "lgm-mid");
+  mid.append(el("b", null, `${d.gl} - ${d.gv}`), el("small", null, `Jornada ${d.jornada} · ${d.cerrada ? "Final" : "En juego"}`));
+  head.append(eq(m.l), mid, eq(m.v));
+  [["l", m.l, d.pl], ["v", m.v, d.pv]].forEach(([lado, k, tot]) => {
+    const c = el("div", "lgm-col"), h = el("h4");
+    h.append(el("span", null, ligaEq(k).n), el("span", null, ligaFmtAporte(tot)));
+    c.append(h);
+    const lista = ligaAportesDe(m, k, lado, d.cerrada);
+    if (lista == null) c.append(el("div", "lgm-vacio", "Sin detalle de jugadores para esta jornada."));
+    else if (!lista.length) c.append(el("div", "lgm-vacio", "Nadie ha sumado puntos todavía."));
+    else lista.forEach(x => { const f = el("div", "lgm-j"); f.append(el("span", null, x.name), el("b", null, ligaFmtAporte(x.pts))); c.append(f); });
+    cols.append(c);
+  });
+  $("modal-lg").classList.add("active");
+}
+function cerrarPartidoLiga() { $("modal-lg").classList.remove("active"); }
 
 function cambiarOrden(k) { sortKey = k; sortDir = -1; render(); }
 function toggleDir() { sortDir = -sortDir; render(); }
@@ -1403,7 +1470,7 @@ function abrirPuntosJugador(nombre) {
   $("modal-pts").classList.add("active");
   const wrap = $("pts-chart-wrap"); wrap.scrollLeft = wrap.scrollWidth;     // empieza viendo el último partido
 }
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") { cerrarPuntos(); $("modal").classList.remove("active"); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { cerrarPartidoLiga(); cerrarPuntos(); $("modal").classList.remove("active"); } });
 
 // Tarjeta de un partido con los puntos de todos los jugadores (se usa en la pestaña Partidos y en el Once de la semana)
 function crearTarjetaPartido(partido) {
