@@ -81,6 +81,21 @@ table.lg-t{min-width:640px;font-size:.9rem;border-collapse:collapse;width:100%}
 .lg-match.lg-click{cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .lg-match.lg-click:hover,.lg-match.lg-click:focus-visible{border-color:var(--blue);box-shadow:0 2px 10px rgba(30,91,184,.18);outline:none}
 #modal-lg{z-index:1450}
+.lg-t td.lg-zona i.lg-info{cursor:pointer;transition:transform .12s}
+.lg-t td.lg-zona i.lg-info:hover,.lg-t td.lg-zona i.lg-info:focus-visible{transform:scale(1.35);color:var(--blue);border-color:var(--blue);outline:none}
+.lgm-rank{overflow-y:auto;padding:6px 14px 14px}
+.lgm-rank .lgm-j{gap:10px}
+.lgm-pos{flex:0 0 26px;font-weight:800;color:var(--mut);text-align:right}
+.lgm-nom{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.lgm-nom span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lgm-nom .lg-esc{width:22px;height:22px}
+.lgm-tit{padding:18px 16px 14px;background:linear-gradient(135deg,#0b2a5b,#1e5bb8);color:#fff;display:flex;align-items:center;gap:12px}
+.lgm-tit .lg-esc{width:42px;height:42px}
+.lgm-tit h3{margin:0 34px 2px 0;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem;text-transform:uppercase;line-height:1.05}
+.lgm-tit small{font-size:.72rem;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+.lg-gol{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.lg-gol .lgm-j{padding:10px 14px}
+.lg-gol .lgm-j:first-child{background:color-mix(in srgb,#f0b429 14%,transparent)}
 .lgm-box{position:relative;width:min(620px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.5);overflow:hidden}
 .lgm-box .close-btn{top:10px;right:10px;z-index:3}
 .lgm-head{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:18px 16px 14px;background:linear-gradient(135deg,#0b2a5b,#1e5bb8);color:#fff}
@@ -521,8 +536,7 @@ td.name:hover .nm{text-decoration:underline}
 <div class="modal-overlay" id="modal-lg" onclick="cerrarPartidoLiga()">
   <div class="lgm-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Resumen del partido">
     <button class="close-btn" onclick="cerrarPartidoLiga()" aria-label="Cerrar">✕</button>
-    <div class="lgm-head" id="lgm-head"></div>
-    <div class="lgm-cols" id="lgm-cols"></div>
+    <div id="lgm-cuerpo"></div>
   </div>
 </div>
 
@@ -752,13 +766,13 @@ function pintarLiga() {
   cont.append(cab);
 
   const sub = el("div", "lg-sub");
-  [["clasificacion", "📊 Clasificación"], ["jornadas", "📅 Jornadas"]].forEach(([k, t]) => {
+  [["clasificacion", "📊 Clasificación"], ["jornadas", "📅 Jornadas"], ["goleadores", "⚽ Goleadores"]].forEach(([k, t]) => {
     const b = el("button", null, t); b.type = "button"; b.setAttribute("aria-selected", String(ligaSub === k));
     b.addEventListener("click", () => { ligaSub = k; pintarLiga(); });
     sub.append(b);
   });
   cont.append(sub);
-  if (ligaSub === "clasificacion") pintarLigaTabla(cont); else pintarLigaJornadas(cont);
+  if (ligaSub === "clasificacion") pintarLigaTabla(cont); else if (ligaSub === "goleadores") pintarLigaGoleadores(cont); else pintarLigaJornadas(cont);
 
   const det = el("details", "lg-cmds");
   det.append(el("summary", null, "Comandos de equipo (escríbelos en la sala)"));
@@ -781,8 +795,12 @@ function pintarLigaTabla(cont) {
   filas.forEach((f, i) => {
     const tr = el("tr");
     const z = zonaDe(i), tdz = el("td", "lg-zona");
-    if (z) { tdz.style.setProperty("--z", ZONAS[z][0]); tdz.title = ZONAS[z][1]; }
-    tdz.append(el("i", null, "?"));
+    if (z) tdz.style.setProperty("--z", ZONAS[z][0]);
+    const inf = el("i", "lg-info", "?");
+    inf.tabIndex = 0; inf.setAttribute("role", "button"); inf.title = `Ranking de jugadores de ${ligaEq(f.k).n}`;
+    inf.addEventListener("click", () => abrirRankingEquipo(f.k));
+    inf.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrirRankingEquipo(f.k); } });
+    tdz.append(inf);
     tr.append(tdz, el("td", "lg-pos", String(i + 1)));
     const td = el("td", "lg-eq"), n = el("span", "lg-eqn");
     n.append(ligaEscudo(f.k), el("span", null, ligaEq(f.k).n));
@@ -840,7 +858,7 @@ function ligaFmtAporte(pts) {
   const porGol = ligaDb.ptsPorGol || 100, n = Math.round(+pts || 0);
   const goles = Math.floor(n / porGol), resto = n - goles * porGol;
   if (!goles) return `${resto} pts`;
-  return "⚽".repeat(goles) + (resto ? ` + ${resto} pts` : "");
+  return (goles > 1 ? goles : "") + "⚽" + (resto ? ` + ${resto} pts` : "");
 }
 function ligaAportesDe(m, k, lado, cerrada) {
   // Jornada en juego: ligaDb.aportes[equipo]. Jornadas cerradas: el bot puede guardarlos en el partido
@@ -853,7 +871,8 @@ function ligaAportesDe(m, k, lado, cerrada) {
   return lista ? lista.filter(x => (+x.pts || 0) > 0).slice().sort((a, b) => b.pts - a.pts) : null;
 }
 function abrirPartidoLiga(m, d) {
-  const head = $("lgm-head"), cols = $("lgm-cols"); head.textContent = ""; cols.textContent = "";
+  const cuerpo = $("lgm-cuerpo"); cuerpo.textContent = "";
+  const head = el("div", "lgm-head"), cols = el("div", "lgm-cols"); cuerpo.append(head, cols);
   const eq = (k) => { const x = el("div", "lgm-eq"); x.append(ligaEscudo(k), el("span", null, ligaEq(k).n)); return x; };
   const mid = el("div", "lgm-mid");
   mid.append(el("b", null, `${d.gl} - ${d.gv}`), el("small", null, `Jornada ${d.jornada} · ${d.cerrada ? "Final" : "En juego"}`));
@@ -869,6 +888,55 @@ function abrirPartidoLiga(m, d) {
     cols.append(c);
   });
   $("modal-lg").classList.add("active");
+}
+// Puntos totales de La Liga por jugador y equipo.
+// Si el bot publica ligaDb.totales = { equipo: [{name, pts}] } (acumulado de toda la Liga) se usa eso;
+// si no, se suma lo guardado en las jornadas cerradas (m.aportes / m.al / m.av) + la jornada en juego.
+function ligaTotales() {
+  const out = {};
+  const sumar = (k, lista) => (lista || []).forEach(x => {
+    const pts = +x.pts || 0; if (!pts) return;
+    const t = (out[k] = out[k] || {}); t[x.name] = (t[x.name] || 0) + pts;
+  });
+  if (ligaDb.totales) Object.entries(ligaDb.totales).forEach(([k, l]) => sumar(k, l));
+  else {
+    (ligaDb.resultados || []).forEach(r => (r.partidos || []).forEach(m => {
+      sumar(m.l, (m.aportes && m.aportes[m.l]) || m.al);
+      sumar(m.v, (m.aportes && m.aportes[m.v]) || m.av);
+    }));
+    if (!ligaDb.terminada) Object.entries(ligaDb.aportes || {}).forEach(([k, l]) => sumar(k, l));
+  }
+  return out;
+}
+function ligaFilaRanking(i, nombre, pts, k) {
+  const f = el("div", "lgm-j"), n = el("div", "lgm-nom");
+  if (k) n.append(ligaEscudo(k));
+  n.append(el("span", null, nombre));
+  f.append(el("span", "lgm-pos", String(i + 1)), n, el("b", null, ligaFmtAporte(pts)));
+  return f;
+}
+function abrirRankingEquipo(k) {
+  const cuerpo = $("lgm-cuerpo"); cuerpo.textContent = "";
+  const lista = Object.entries(ligaTotales()[k] || {}).sort((a, b) => b[1] - a[1]);
+  const total = lista.reduce((s, [, p]) => s + p, 0);
+  const tit = el("div", "lgm-tit"), txt = el("div");
+  txt.append(el("h3", null, ligaEq(k).n), el("small", null, `Ranking de jugadores · ${lista.length} jugador(es) · ${ligaFmtAporte(total)}`));
+  tit.append(ligaEscudo(k), txt);
+  const r = el("div", "lgm-rank");
+  if (!lista.length) r.append(el("div", "lgm-vacio", "Ningún jugador ha sumado puntos para este equipo todavía."));
+  else lista.forEach(([nom, pts], i) => r.append(ligaFilaRanking(i, nom, pts)));
+  cuerpo.append(tit, r);
+  $("modal-lg").classList.add("active");
+}
+function pintarLigaGoleadores(cont) {
+  const filas = [];
+  Object.entries(ligaTotales()).forEach(([k, t]) => Object.entries(t).forEach(([nom, pts]) => filas.push({ k, nom, pts })));
+  filas.sort((a, b) => b.pts - a.pts || a.nom.localeCompare(b.nom, "es"));
+  cont.append(el("p", "lg-nota", `Máximos goleadores de La Liga: cada ${ligaDb.ptsPorGol || 100} puntos aportados a su equipo = ⚽.`));
+  const box = el("div", "lg-gol");
+  if (!filas.length) box.append(el("div", "lgm-vacio", "Todavía nadie ha sumado puntos en La Liga."));
+  else filas.forEach((f, i) => box.append(ligaFilaRanking(i, f.nom, f.pts, f.k)));
+  cont.append(box);
 }
 function cerrarPartidoLiga() { $("modal-lg").classList.remove("active"); }
 
